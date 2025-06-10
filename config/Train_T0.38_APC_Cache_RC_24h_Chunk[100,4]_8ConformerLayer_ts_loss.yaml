@@ -19,7 +19,7 @@ model:
   encoder_dim: 256
   pre-train: True
   pre-train_model_t: 'test_models/RC_24h_Offline_APC_fustep20.pth'
-  pre-train_model_s: 'test_models/RC_24h_Chunk[100,4]_8Conformer_Best.pth'
+  pre-train_model_s: null
 
 train:
   train_num_workers: 8
@@ -35,9 +35,9 @@ train:
   attn_loss_weight: 0.05    # 注意力图损失权重
 
 result:
-  log_output_path: 'results/Finetune_T0.38_APC_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_ts_loss/train.log'
+  log_output_path: 'results/Train_T0.38_APC_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_ts_loss/train.log'
   log_interval: 100
-  checkpoint_output_dir: 'results/Finetune_T0.38_APC_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_ts_loss/checkpoints'
-  dcase_output_dir: 'results/Finetune_T0.38_APC_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_ts_loss/results'
+  checkpoint_output_dir: 'results/Train_T0.38_APC_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_ts_loss/checkpoints'
+  dcase_output_dir: 'results/Train_T0.38_APC_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_ts_loss/results'
 
 

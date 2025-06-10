@@ -96,22 +96,65 @@ def main(args):
     if args['model']['pre-train']:
         # 加载教师模型
         pretrained_dict_t = torch.load(args['model']['pre-train_model_t'], map_location=device)
-        model.teacher_model.load_state_dict(pretrained_dict_t)
+        
+        # 检查教师模型路径是否包含'APC'关键字，如果是则忽略APC层
+        if 'APC' in args['model']['pre-train_model_t']:
+            # 过滤掉包含'apc'的层（忽略大小写）
+            original_keys_count = len(pretrained_dict_t)
+            pretrained_dict_t = {k: v for k, v in pretrained_dict_t.items() if 'apc' not in k.lower()}
+            filtered_keys_count = len(pretrained_dict_t)
+            print(f"检测到APC教师模型,忽略了 {original_keys_count - filtered_keys_count} 个APC相关层")
+            
+            # 使用strict=False避免缺少APC层时报错
+            model.teacher_model.load_state_dict(pretrained_dict_t, strict=False)
+        else:
+            # 原有逻辑：加载所有层
+            model.teacher_model.load_state_dict(pretrained_dict_t)
+        
         print('成功加载教师模型')
         
         # 只有当学生模型路径不为None时才加载学生模型
         if args['model']['pre-train_model_s'] is not None:
             pretrained_dict_s = torch.load(args['model']['pre-train_model_s'], map_location=device)
+            
+            # 检查学生模型路径是否包含'APC'关键字，如果是则忽略APC层
+            if 'APC' in args['model']['pre-train_model_s']:
+                # 过滤掉包含'apc'的层（忽略大小写）
+                original_keys_count = len(pretrained_dict_s)
+                pretrained_dict_s = {k: v for k, v in pretrained_dict_s.items() if 'apc' not in k.lower()}
+                filtered_keys_count = len(pretrained_dict_s)
+                print(f"检测到APC学生模型, 忽略了 {original_keys_count - filtered_keys_count} 个APC相关层")
+            
             # 只更新学生模型相关的参数，避免覆盖教师模型
             model_dict = model.state_dict()
             # 过滤掉教师模型的参数键
             student_pretrained_dict = {k: v for k, v in pretrained_dict_s.items() 
                                     if not k.startswith('teacher_model.')}
             model_dict.update(student_pretrained_dict)
-            model.load_state_dict(model_dict)
+            model.load_state_dict(model_dict, strict=False)  # 使用strict=False
             print('成功加载学生模型')
         else:
             print('学生模型从头开始训练')
+
+    # if args['model']['pre-train']:
+    #     # 加载教师模型
+    #     pretrained_dict_t = torch.load(args['model']['pre-train_model_t'], map_location=device)
+    #     model.teacher_model.load_state_dict(pretrained_dict_t)
+    #     print('成功加载教师模型')
+        
+    #     # 只有当学生模型路径不为None时才加载学生模型
+    #     if args['model']['pre-train_model_s'] is not None:
+    #         pretrained_dict_s = torch.load(args['model']['pre-train_model_s'], map_location=device)
+    #         # 只更新学生模型相关的参数，避免覆盖教师模型
+    #         model_dict = model.state_dict()
+    #         # 过滤掉教师模型的参数键
+    #         student_pretrained_dict = {k: v for k, v in pretrained_dict_s.items() 
+    #                                 if not k.startswith('teacher_model.')}
+    #         model_dict.update(student_pretrained_dict)
+    #         model.load_state_dict(model_dict)
+    #         print('成功加载学生模型')
+    #     else:
+    #         print('学生模型从头开始训练')
 
     # 优化器初始化
     optimizer = optim.Adam(model.parameters(), lr=args['train']['lr'])

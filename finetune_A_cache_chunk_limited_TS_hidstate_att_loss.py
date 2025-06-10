@@ -98,15 +98,49 @@ def main(args):
         model_dict_t = model.teacher_model.state_dict()
         pretrained_dict_t = torch.load(args['model']['pre-train_model_t'], map_location=device)
         pretrained_dict_s = torch.load(args['model']['pre-train_model_s'], map_location=device)
+        
+        # 加载学生模型（保持原有逻辑）
         key_list = [key for key in pretrained_dict_s.keys()]  
         for key in key_list:
             model_dict[key] = pretrained_dict_s[key]
-        key_list_t = [key for key in pretrained_dict_t.keys()] 
-        for key in key_list_t:
-            model_dict_t[key] = pretrained_dict_t[key]
+        
+        # 加载教师模型，根据预训练模型路径判断是否忽略APC层
+        key_list_t = [key for key in pretrained_dict_t.keys()]
+        
+        # 检查教师模型路径是否包含'APC'关键字
+        if 'APC' in args['model']['pre-train_model_t']:
+            # 过滤掉包含'apc'的层（忽略大小写）
+            filtered_key_list_t = [key for key in key_list_t if 'apc' not in key.lower()]
+            print(f"检测到APC模型, 忽略了 {len(key_list_t) - len(filtered_key_list_t)} 个APC相关层")
+            
+            for key in filtered_key_list_t:
+                if key in model_dict_t:  # 确保目标模型中存在该层
+                    model_dict_t[key] = pretrained_dict_t[key]
+                else:
+                    print(f"警告: 目标模型中不存在层 {key}")
+        else:
+            # 原有逻辑：加载所有层
+            for key in key_list_t:
+                model_dict_t[key] = pretrained_dict_t[key]
+        
         model.load_state_dict(model_dict)
-        model.teacher_model.load_state_dict(model_dict_t)
+        model.teacher_model.load_state_dict(model_dict_t, strict=False)  # 使用strict=False避免缺少APC层时报错
         print('成功加载教师和学生模型')
+
+    # if args['model']['pre-train']:
+    #     model_dict = model.state_dict()  # 获取当前模型的所有参数
+    #     model_dict_t = model.teacher_model.state_dict()
+    #     pretrained_dict_t = torch.load(args['model']['pre-train_model_t'], map_location=device)
+    #     pretrained_dict_s = torch.load(args['model']['pre-train_model_s'], map_location=device)
+    #     key_list = [key for key in pretrained_dict_s.keys()]  
+    #     for key in key_list:
+    #         model_dict[key] = pretrained_dict_s[key]
+    #     key_list_t = [key for key in pretrained_dict_t.keys()] 
+    #     for key in key_list_t:
+    #         model_dict_t[key] = pretrained_dict_t[key]
+    #     model.load_state_dict(model_dict)
+    #     model.teacher_model.load_state_dict(model_dict_t)
+    #     print('成功加载教师和学生模型')
 
     # 优化器初始化
     optimizer = optim.Adam(model.parameters(), lr=args['train']['lr'])
