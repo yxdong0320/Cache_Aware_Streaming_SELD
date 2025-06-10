@@ -1,0 +1,4 @@
+echo "dataset/" > .gitignore
+echo "train_logs/" >> .gitignore
+echo "results/" >> .gitignore
+echo "__pycache__/" >> .gitignore
