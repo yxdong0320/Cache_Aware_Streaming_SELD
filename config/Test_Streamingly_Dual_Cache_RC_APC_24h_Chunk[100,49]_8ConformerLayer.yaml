@@ -1,0 +1,28 @@
+data:
+  wav_folder_path: 'dataset/foa_dev_test'
+  ref_files_dir: 'dataset/metadata_dev_test'
+  norm_file: 'dataset/24h_ACS_foa_wts'
+  segment_len: 100
+  select_num: 10  # video per seconds
+  batch_size: 1
+  train_ignore: 'enh' # No ACS
+  test_ignore: 'enh'
+
+model:
+  type: 'Dualmode_seddoa_pool_APC'
+  in_channel: 7
+  in_dim: 64
+  out_dim: 39
+  att_context_size: [100,49]
+  num_conformer_layer: 8
+  encoder_dim: 256
+  apc_future_steps: 10
+  pre-train: True
+  pre-train_model: 'results/Dual_Cache_APC_RC_24h_Chunk[100,49]_8ConformerLayer_2/checkpoints/checkpoint_epoch201_step54873.pth'
+
+result:
+  log_output_path: 'results/Test_Streamingly_Dual_Cache_RC_APC_24h_Chunk[100,49]_8ConformerLayer/train.log'
+  log_interval: 100
+  dcase_output_dir: 'results/Test_Streamingly_Dual_Cache_RC_APC_24h_Chunk[100,49]_8ConformerLayer/results'
+
+

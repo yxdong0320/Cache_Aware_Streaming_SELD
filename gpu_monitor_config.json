@@ -1,0 +1,10 @@
+{
+    "email": {
+        "sender": "yxdong0320@mail.ustc.edu.cn",
+        "password": "WTv2UZstVgRckMab",
+        "receiver": "yxdong0320@mail.ustc.edu.cn",
+        "smtp_server": "mail.ustc.edu.cn", 
+        "smtp_port": 465
+    },
+    "check_interval": 60
+}

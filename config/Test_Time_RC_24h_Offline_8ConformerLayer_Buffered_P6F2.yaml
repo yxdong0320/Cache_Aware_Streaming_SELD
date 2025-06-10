@@ -1,0 +1,27 @@
+data:
+  ref_files_dir: 'dataset/metadata_dev_test'
+  norm_file: 'dataset/24h_ACS_foa_wts'
+  wav_path: 'dataset/foa_dev_test'
+
+model:
+  type: 'seddoa_nopool'
+  in_channel: 7
+  in_dim: 64
+  out_dim: 39
+  use_class_thre: False
+  class_thre: [0.7, 0.7, 0.7, 0.45, 0.6, 0.3, 0.65, 0.55, 0.65, 0.7, 0.3, 0.7, 0.7]
+  inf_type: 'past_future' # ave or past_future
+  window_length: 2  # 每次处理的窗长
+  segment_length: 10 # 每次音频段的长度
+  output_num_frame: 10 # 每秒输出的帧数
+  past_len: 60
+  sr: 24000
+  pre-train: True
+  pre-train_model: 'results/Offline_RC_24h_8ConformerLayer/checkpoints/checkpoint_epoch147_step40131.pth'
+
+result:
+  log_output_path: 'results/Test_Time_RC_24h_Offline_8ConformerLayer_Buffered_P6F2/train.log'
+  log_interval: 100
+  dcase_output_dir: 'results/Test_Time_RC_24h_Offline_8ConformerLayer_Buffered_P6F2/results'
+
+

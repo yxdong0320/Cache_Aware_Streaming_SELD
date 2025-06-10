@@ -1,0 +1,35 @@
+data:
+  train_lmdb_dir: '/disk6/yxdong/Dcase2023/synth_real_data/synth_real_data_ACS/lmdb_foa_dev_ACSdata_label_len10s'
+  test_lmdb_dir: '/disk6/yxdong/Dcase2023/synth_real_data/combine_synth_real/lmdb_test_foa_dev_data_label_len10s'
+  ref_files_dir: 'dataset/metadata_dev_test'
+  norm_file: 'dataset/24h_ACS_foa_wts'
+  segment_len: 100
+  select_num: 10  # video per seconds
+  batch_size: 32
+  train_ignore: 'enh' # No ACS
+  test_ignore: 'enh'
+
+model:
+  type: 'seddoa_nopool'
+  in_channel: 7
+  in_dim: 64
+  out_dim: 39
+  att_context_size: [100,49]
+  num_conformer_layer: 8
+  encoder_dim: 64
+  pre-train: False
+  pre-train_model: '...'
+
+train:
+  train_num_workers: 8
+  test_num_workers: 4
+  lr: 0.001
+  nb_steps: 60000
+
+result:
+  log_output_path: 'results/Cache_RC_24h_Chunk[100,49]_8ConformerLayer_64EncoderDim/train.log'
+  log_interval: 100
+  checkpoint_output_dir: 'results/Cache_RC_24h_Chunk[100,49]_8ConformerLayer_64EncoderDim/checkpoints'
+  dcase_output_dir: 'results/Cache_RC_24h_Chunk[100,49]_8ConformerLayer_64EncoderDim/results'
+
+

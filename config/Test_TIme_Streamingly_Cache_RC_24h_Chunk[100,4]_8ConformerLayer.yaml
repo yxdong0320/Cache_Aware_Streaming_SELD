@@ -1,0 +1,26 @@
+data:
+  wav_folder_path: 'dataset/foa_dev_test'
+  ref_files_dir: 'dataset/metadata_dev_test'
+  norm_file: 'dataset/24h_ACS_foa_wts'
+  segment_len: 100
+  select_num: 10  # video per seconds
+  batch_size: 1
+  train_ignore: 'enh' # No ACS
+  test_ignore: 'enh'
+
+model:
+  type: 'seddoa_nopool'
+  in_channel: 7
+  in_dim: 64
+  out_dim: 39
+  att_context_size: [100,4]
+  num_conformer_layer: 8
+  pre-train: True
+  pre-train_model: 'test_models/RC_24h_Chunk[100,4]_8Conformer_Best.pth'
+
+result:
+  log_output_path: 'results/Test_TIme_Streamingly_Cache_RC_24h_Chunk[100,4]_8ConformerLayer/train.log'
+  log_interval: 100
+  dcase_output_dir: 'results/Test_TIme_Streamingly_Cache_RC_24h_Chunk[100,4]_8ConformerLayer/results'
+
+
