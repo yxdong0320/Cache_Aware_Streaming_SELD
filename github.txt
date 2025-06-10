@@ -9,11 +9,7 @@ git add filename.py
 # 预览会添加哪些文件
 git add --dry-run .
 
-<<<<<<< HEAD
-git commit -m "edited"
-=======
 git commit -m "200 server test"
->>>>>>> 926765130701443ef355b5be130a78bf50eae099
 
 # 由于已经设置了上游跟踪，只需要：
 git push
