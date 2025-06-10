@@ -1,12 +1,12 @@
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=2
 
 # nohup python finetune_A_cache_chunk_limited_TS_hidstate_att_loss.py \
 #         -c Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_ts_hidden_weighted_att_loss \
 #         > train_logs/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_ts_hidden_weighted_att_loss_2.log &
 
 nohup python train_A_cache_chunk_limited_TS_hidstate_att_loss.py \
-        -c Train_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_loss \
-        > train_logs/Train_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_loss.log &
+        -c Train_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_ts_hidden_weighted_att_loss \
+        > train_logs/Train_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_ts_hidden_weighted_att_loss_2.log &
 
 # nohup python finetune_A_cache_chunk_limited_TS_hidstate_att_loss.py \
 #         -c Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_loss_weighted \

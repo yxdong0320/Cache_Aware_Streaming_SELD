@@ -31,13 +31,13 @@ train:
   use_hidden_distill: true  # 是否使用隐藏层蒸馏
   use_attn_distill: false    # 是否使用注意力图蒸馏
   ts_loss_weight: 0.5
-  hidden_loss_weight: 0.0001   # 隐藏层损失权重
+  hidden_loss_weight: 0.001   # 隐藏层损失权重
   attn_loss_weight: 0.05    # 注意力图损失权重
 
 result:
-  log_output_path: 'results/Train_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_loss/train.log'
+  log_output_path: 'results/Train_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_loss_0.001/train.log'
   log_interval: 100
-  checkpoint_output_dir: 'results/Train_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_loss/checkpoints'
-  dcase_output_dir: 'results/Train_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_loss/results'
+  checkpoint_output_dir: 'results/Train_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_loss_0.001/checkpoints'
+  dcase_output_dir: 'results/Train_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_loss_0.001/results'
 
 
