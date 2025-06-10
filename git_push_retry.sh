@@ -3,6 +3,10 @@
 # git_push_retry.sh
 # 循环推送脚本，直到成功为止
 
+# chmod +x git_push_retry.sh
+
+# ./git_push_retry.sh
+
 echo "开始尝试推送到GitHub..."
 attempt=1
 max_attempts=100  # 最大尝试次数，避免无限循环
