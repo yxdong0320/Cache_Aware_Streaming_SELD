@@ -1,0 +1,18 @@
+git status
+
+# 添加所有修改的文件
+git add .
+
+# 或者添加特定文件
+git add filename.py
+
+# 预览会添加哪些文件
+git add --dry-run .
+
+git commit -m "描述你的修改内容"
+
+# 由于已经设置了上游跟踪，只需要：
+git push
+
+# 或者明确指定分支（如果需要）：
+git push origin master
