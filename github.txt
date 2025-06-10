@@ -16,3 +16,5 @@ git push
 
 # 或者明确指定分支（如果需要）：
 git push origin master
+
+git pull origin master
