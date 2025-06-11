@@ -1,16 +1,16 @@
 export CUDA_VISIBLE_DEVICES=3
 
 # nohup python finetune_A_cache_chunk_limited_TS_hidstate_att_loss.py \
-#         -c Finetune_T0.38_APC_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_ts_loss \
-#         > train_logs/Finetune_T0.38_APC_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_ts_loss.log &
+#         -c Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_ts_hidden_weighted_loss \
+#         > train_logs/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_ts_hidden_weighted_loss.log &
 
 # nohup python train_A_cache_chunk_limited_TS_hidstate_att_loss.py \
-#         -c Train_T0.38_APC_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_ts_loss \
-#         > train_logs/Train_T0.38_APC_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_ts_loss.log &
+#         -c Train_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_ts_hidden_weighted_loss \
+#         > train_logs/Train_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_ts_hidden_weighted_loss &
 
 nohup python train_A_dual_mode_cache_CrossModalAPC.py \
-        -c Dual_Cache_APC_RC_24h_Chunk[100,4]_L8EM256 \
-        > train_logs/Dual_Cache_APC_RC_24h_Chunk[100,4]_L8EM256.log &
+        -c Dual_Cache_APC_RC_24h_Chunk[100,4]_L8EM256_Fustep20_APC_CMAPC \
+        > train_logs/Dual_Cache_APC_RC_24h_Chunk[100,4]_L8EM256_Fustep20_APC_CMAPC.log &
 
 # python finetune_A_cache_chunk_limited_TS_hidstate_att_loss.py \
 #         -c Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_loss \
