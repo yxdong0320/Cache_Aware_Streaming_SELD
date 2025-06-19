@@ -1,0 +1,44 @@
+data:
+  train_lmdb_dir: '/disk6/yxdong/Dcase2023/synth_real_data/combine_synth_real/lmdb_foa_dev_data_label_len10s'
+  test_lmdb_dir: '/disk6/yxdong/Dcase2023/synth_real_data/combine_synth_real/lmdb_test_foa_dev_data_label_len10s'
+  ref_files_dir: 'dataset/metadata_dev_test'
+  norm_file: 'dataset/24h_ACS_foa_wts'
+  segment_len: 100
+  batch_size: 16
+  train_ignore: 'enh' # No ACS
+  test_ignore: 'enh'
+
+model:
+  type: 'Dualmode_seddoa_nopool_APC'
+  in_channel: 7
+  in_dim: 64
+  out_dim: 39
+  att_context_size: [100,49]
+  num_conformer_layer: 8
+  encoder_dim: 256
+  apc_future_steps: 15
+  pre-train: false
+  pre-train_model_t: null
+  pre-train_model_s: null
+
+train:
+  train_num_workers: 8
+  test_num_workers: 4
+  lr: 0.0008
+  nb_steps: 120000
+  early_stop_patience: 40
+  use_APC: true
+  use_nonstream_apc: false
+  use_cross_modal_apc: true
+  stream_weight: 1.5
+  nonstream_weight: 1.0
+  distill_weight: 0.05
+  apc_weight: 0.5
+
+result:
+  log_output_path: 'results/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Strong_CMAPC/train.log'
+  log_interval: 100
+  checkpoint_output_dir: 'results/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Strong_CMAPC/checkpoints'
+  dcase_output_dir: 'results/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Strong_CMAPC/results'
+
+
