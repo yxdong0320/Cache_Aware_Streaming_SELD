@@ -30,6 +30,7 @@ train:
   use_nonstream_apc: true
   use_APC: true
   use_cross_modal_apc: false
+  tri_stage_loss_weight: false
   stream_weight: 1.0
   nonstream_weight: 1.0
   distill_weight: 0.1

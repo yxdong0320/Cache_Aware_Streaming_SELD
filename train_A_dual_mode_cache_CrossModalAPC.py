@@ -27,6 +27,7 @@ def set_random_seed(seed):
     torch.cuda.manual_seed_all(seed)
     return None
 
+
 def main(args):
     # 设置log
     log_output_folder = os.path.dirname(args['result']['log_output_path'])
@@ -88,6 +89,32 @@ def main(args):
     epoch_count = 0
     step_count = 0
 
+    def get_dynamic_weights(step_count, total_steps):
+        """根据训练进度动态调整权重"""
+        progress = step_count / total_steps
+        
+        if progress < 0.3:
+            # 前期：平衡学习
+            return {
+                'stream_weight': 1.0,
+                'distill_weight': 0.3,
+                'apc_weight': 0.05
+            }
+        elif progress < 0.7:
+            # 中期：增强流式
+            return {
+                'stream_weight': 1.5,
+                'distill_weight': 0.2,
+                'apc_weight': 0.1
+            }
+        else:
+            # 后期：专注流式
+            return {
+                'stream_weight': 2.0,
+                'distill_weight': 0.1,
+                'apc_weight': 0.15
+            }
+
     # 开始训练
     stop_training = False
     best_seld_score = float('inf')  # 初始化最佳SELD分数
@@ -128,11 +155,19 @@ def main(args):
             
             stream_loss = criterion(stream_pred, target)
             nonstream_loss = criterion(nonstream_pred, target)
-            
+
+            if args['train'].get('tri_stage_loss_weight', False):
+            # 在训练循环中使用
+                weights = get_dynamic_weights(step_count, total_steps)
+                total_loss = stream_loss * weights['stream_weight'] + \
+                            nonstream_loss * args['train']['nonstream_weight'] + \
+                            distill_loss * weights['distill_weight']
+
+            else:
             # 基础损失
-            total_loss = stream_loss * args['train']['stream_weight'] + \
-                        nonstream_loss * args['train']['nonstream_weight'] + \
-                        distill_loss * args['train']['distill_weight']
+                total_loss = stream_loss * args['train']['stream_weight'] + \
+                            nonstream_loss * args['train']['nonstream_weight'] + \
+                            distill_loss * args['train']['distill_weight']
             
             # 根据配置添加APC损失
             if args['train'].get('use_APC', False):
@@ -148,8 +183,11 @@ def main(args):
                     nonstream_apc_loss = apc_losses['nonstream_apc_loss']
                     apc_loss_components += nonstream_apc_loss
                     train_non_stream_apc_loss.append(nonstream_apc_loss.item())
-                
-                total_loss += apc_loss_components * args['train']['apc_weight']
+
+                if args['train'].get('tri_stage_loss_weight', False):
+                    total_loss += apc_loss_components * weights['apc_weight']
+                else:
+                    total_loss += apc_loss_components * args['train']['apc_weight']
 
             total_loss.backward()
             optimizer.step()

@@ -1,8 +1,8 @@
 data:
-  train_lmdb_dir: '/disk6/yxdong/Dcase2023/synth_real_data/combine_synth_real/lmdb_foa_dev_data_label_len10s'
-  test_lmdb_dir: '/disk6/yxdong/Dcase2023/synth_real_data/combine_synth_real/lmdb_test_foa_dev_data_label_len10s'
-  ref_files_dir: 'dataset/metadata_dev_test'
-  norm_file: 'dataset/24h_ACS_foa_wts'
+  train_lmdb_dir: '/disk3/yxdong/Dcase2023/synth_real_data/synth_real_data_ACS/lmdb_foa_dev_ACSdata_label_len10s'
+  test_lmdb_dir: '/disk3/yxdong/Dcase2023/synth_real_data/combine_synth_real/lmdb_test_foa_dev_data_label_len10s'
+  ref_files_dir: '/disk3/yxdong/cache_aware_streaming_SELD_old/dataset/metadata_dev_test'
+  norm_file: '/disk3/yxdong/cache_aware_streaming_SELD_old/dataset/24h_ACS_foa_wts'
   segment_len: 100
   batch_size: 16
   train_ignore: 'enh' # No ACS
