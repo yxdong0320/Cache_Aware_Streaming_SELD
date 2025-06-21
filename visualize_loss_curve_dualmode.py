@@ -23,18 +23,27 @@ def parse_log_file(log_file_path):
         'train_stream_loss': [],
         'train_non_stream_loss': [],
         'train_non_stream_apc_loss': [],
+        'train_cross_modal_apc_loss': [],  # 新增字段
         'test_steps': [],
         'test_epochs': [],
         'average_test_nonstream_loss': [],
         'average_test_stream_loss': []
     }
     
-    # 训练损失的正则表达式
-    train_pattern = re.compile(
+    # 更灵活的训练损失正则表达式 - 兼容两种APC loss名称
+    train_pattern1 = re.compile(
         r'epoch: (\d+), step: (\d+)/\d+, lr:([\d.]+), '
         r'train_loss:([\d.]+), train_distill_loss:([\d.]+), '
         r'train_stream_loss:([\d.]+), train_non_stream_loss:([\d.]+), '
         r'train_non_stream_apc_loss:([\d.]+)'
+    )
+    
+    # 新的模式匹配cross_modal_apc_loss
+    train_pattern2 = re.compile(
+        r'epoch: (\d+), step: (\d+)/\d+, lr:([\d.]+), '
+        r'train_loss:([\d.]+), train_distill_loss:([\d.]+), '
+        r'train_stream_loss:([\d.]+), train_non_stream_loss:([\d.]+), '
+        r'train_cross_modal_apc_loss:([\d.]+)'
     )
     
     # 测试损失的正则表达式
@@ -48,8 +57,8 @@ def parse_log_file(log_file_path):
     
     with open(log_file_path, 'r', encoding='utf-8') as f:
         for line_num, line in enumerate(f, 1):
-            # 匹配训练损失
-            train_match = train_pattern.search(line)
+            # 首先尝试匹配原始格式的训练损失
+            train_match = train_pattern1.search(line)
             if train_match:
                 epoch, step, lr, train_loss, distill_loss, stream_loss, non_stream_loss, apc_loss = train_match.groups()
                 
@@ -61,6 +70,23 @@ def parse_log_file(log_file_path):
                 data['train_stream_loss'].append(float(stream_loss))
                 data['train_non_stream_loss'].append(float(non_stream_loss))
                 data['train_non_stream_apc_loss'].append(float(apc_loss))
+                data['train_cross_modal_apc_loss'].append(0.0)  # 填充默认值
+                continue
+            
+            # 然后尝试匹配cross_modal_apc格式的训练损失
+            train_match = train_pattern2.search(line)
+            if train_match:
+                epoch, step, lr, train_loss, distill_loss, stream_loss, non_stream_loss, cmapc_loss = train_match.groups()
+                
+                data['epochs'].append(int(epoch))
+                data['steps'].append(int(step))
+                data['lr'].append(float(lr))
+                data['train_loss'].append(float(train_loss))
+                data['train_distill_loss'].append(float(distill_loss))
+                data['train_stream_loss'].append(float(stream_loss))
+                data['train_non_stream_loss'].append(float(non_stream_loss))
+                data['train_non_stream_apc_loss'].append(0.0)  # 填充默认值
+                data['train_cross_modal_apc_loss'].append(float(cmapc_loss))
                 continue
             
             # 匹配测试损失
@@ -123,14 +149,30 @@ def plot_loss_curves(data, save_dir, experiment_name="experiment"):
     ax2.legend()
     ax2.grid(True, alpha=0.3)
     
-    # 3. APC损失
+    # 3. APC损失 - 修改为同时显示两种APC loss
     ax3 = axes[0, 2]
-    ax3.plot(data['steps'], data['train_non_stream_apc_loss'], 'purple', linewidth=1, alpha=0.8, label='NonStream APC Loss')
-    ax3.set_title('APC Loss')
-    ax3.set_xlabel('Steps')
-    ax3.set_ylabel('Loss')
-    ax3.legend()
-    ax3.grid(True, alpha=0.3)
+    # 检查哪种APC loss有数据
+    has_apc = any(val > 0 for val in data['train_non_stream_apc_loss'])
+    has_cmapc = any(val > 0 for val in data['train_cross_modal_apc_loss'])
+    
+    if has_apc:
+        ax3.plot(data['steps'], data['train_non_stream_apc_loss'], 'purple', 
+                linewidth=1, alpha=0.8, label='NonStream APC Loss')
+    if has_cmapc:
+        ax3.plot(data['steps'], data['train_cross_modal_apc_loss'], 'orange', 
+                linewidth=1, alpha=0.8, label='Cross-Modal APC Loss')
+    
+    if has_apc or has_cmapc:
+        ax3.set_title('APC Loss')
+        ax3.set_xlabel('Steps')
+        ax3.set_ylabel('Loss')
+        ax3.legend()
+        ax3.grid(True, alpha=0.3)
+    else:
+        ax3.text(0.5, 0.5, 'No APC Loss Data', 
+                horizontalalignment='center', verticalalignment='center', 
+                transform=ax3.transAxes, fontsize=12)
+        ax3.set_title('APC Loss')
     
     # 4. 学习率
     ax4 = axes[1, 0]
@@ -206,8 +248,8 @@ def save_loss_data(data, save_dir, experiment_name="experiment"):
     
     os.makedirs(save_dir, exist_ok=True)
     
-    # 保存训练数据
-    train_df = pd.DataFrame({
+    # 保存训练数据 - 包含两种APC loss
+    train_data = {
         'epoch': data['epochs'],
         'step': data['steps'],
         'lr': data['lr'],
@@ -215,8 +257,11 @@ def save_loss_data(data, save_dir, experiment_name="experiment"):
         'train_distill_loss': data['train_distill_loss'],
         'train_stream_loss': data['train_stream_loss'],
         'train_non_stream_loss': data['train_non_stream_loss'],
-        'train_non_stream_apc_loss': data['train_non_stream_apc_loss']
-    })
+        'train_non_stream_apc_loss': data['train_non_stream_apc_loss'],
+        'train_cross_modal_apc_loss': data['train_cross_modal_apc_loss']
+    }
+    
+    train_df = pd.DataFrame(train_data)
     
     train_csv_path = os.path.join(save_dir, f"{experiment_name}_train_losses.csv")
     train_df.to_csv(train_csv_path, index=False)
@@ -268,9 +313,21 @@ def plot_specific_losses(data, save_dir, experiment_name="experiment"):
     plt.ylabel('Loss')
     plt.grid(True, alpha=0.3)
     
-    # 3. APC损失
+    # 3. APC损失 - 修改为显示两种APC loss
     plt.subplot(2, 2, 3)
-    plt.plot(data['steps'], data['train_non_stream_apc_loss'], 'purple', linewidth=1, alpha=0.8)
+    has_apc = any(val > 0 for val in data['train_non_stream_apc_loss'])
+    has_cmapc = any(val > 0 for val in data['train_cross_modal_apc_loss'])
+    
+    if has_apc:
+        plt.plot(data['steps'], data['train_non_stream_apc_loss'], 'purple', 
+                linewidth=1, alpha=0.8, label='NonStream APC Loss')
+    if has_cmapc:
+        plt.plot(data['steps'], data['train_cross_modal_apc_loss'], 'orange', 
+                linewidth=1, alpha=0.8, label='Cross-Modal APC Loss')
+    
+    if has_apc or has_cmapc:
+        plt.legend()
+    
     plt.title('APC Loss')
     plt.xlabel('Steps')
     plt.ylabel('Loss')
@@ -337,6 +394,15 @@ def main(log_file_path, save_dir, experiment_name=None):
     if data['average_test_nonstream_loss']:
         print(f"  最终测试损失(NonStream): {data['average_test_nonstream_loss'][-1]:.4f}")
         print(f"  最终测试损失(Stream): {data['average_test_stream_loss'][-1]:.4f}")
+    
+    # 检查APC loss类型
+    has_apc = any(val > 0 for val in data['train_non_stream_apc_loss'])
+    has_cmapc = any(val > 0 for val in data['train_cross_modal_apc_loss'])
+    if has_apc:
+        print(f"  最终APC损失: {data['train_non_stream_apc_loss'][-1]:.4f}")
+    if has_cmapc:
+        print(f"  最终Cross-Modal APC损失: {data['train_cross_modal_apc_loss'][-1]:.4f}")
+    
     print(f"  结果保存目录: {save_dir}")
 
 if __name__ == "__main__":
@@ -358,3 +424,7 @@ if __name__ == "__main__":
     main(args.log_file, args.output_dir, args.name)
 
 # python visualize_loss_curve_dualmode.py results/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC/train.log -o plots -n "Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC"
+# python visualize_loss_curve_dualmode.py results/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep20_APC/train.log -o plots -n "Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep20_APC"
+# python visualize_loss_curve_dualmode.py results/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep20_CMAPC/train.log -o plots -n "Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep20_CMAPC"
+# python visualize_loss_curve_dualmode.py results/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Stream_Focus/train.log -o plots -n "Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Stream_Focus"
+# python visualize_loss_curve_dualmode.py results/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Strong_CMAPC/train.log -o plots -n "Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Strong_CMAPC"

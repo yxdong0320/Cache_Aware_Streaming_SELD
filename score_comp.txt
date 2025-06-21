@@ -1,0 +1,155 @@
+Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC
+INFO: 06/15/2025 07:43:53: epoch: 127, step: 69342/120000, train_time:221.13, test_time:14.27, average_train_loss:0.0025, average_test_nonstream_loss:0.0343, average_test_stream_loss:0.0409
+INFO: 06/15/2025 07:43:53: Nonstream ER/F/LE/LR/SELD: 0.5767/0.4177/18.2393/0.6265/0.4085
+INFO: 06/15/2025 07:43:53: Stream ER/F/LE/LR/SELD: 0.6177/0.4092/18.4104/0.6206/0.4225
+model:
+  type: 'Dualmode_seddoa_nopool_APC'
+  in_channel: 7
+  in_dim: 64
+  out_dim: 39
+  att_context_size: [100,49]
+  num_conformer_layer: 8
+  encoder_dim: 256
+  apc_future_steps: 10
+  pre-train: false
+  pre-train_model_t: null
+  pre-train_model_s: null
+
+train:
+  train_num_workers: 8
+  test_num_workers: 4
+  lr: 0.001
+  nb_steps: 120000
+  early_stop_patience: 40
+  use_nonstream_apc: true
+  use_APC: true
+  use_cross_modal_apc: false
+  stream_weight: 1.0
+  nonstream_weight: 1.0
+  distill_weight: 0.1
+  apc_weight: 0.05
+
+Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep20_APC
+INFO: 06/15/2025 02:47:53: epoch: 55, step: 30030/120000, train_time:240.33, test_time:14.57, average_train_loss:0.0113, average_test_nonstream_loss:0.0256, average_test_stream_loss:0.0327
+INFO: 06/15/2025 02:47:53: Nonstream ER/F/LE/LR/SELD: 0.5781/0.3278/20.8132/0.5444/0.4554
+INFO: 06/15/2025 02:47:53: Stream ER/F/LE/LR/SELD: 0.6185/0.3520/19.7053/0.5893/0.4467
+model:
+  type: 'Dualmode_seddoa_nopool_APC'
+  in_channel: 7
+  in_dim: 64
+  out_dim: 39
+  att_context_size: [100,49]
+  num_conformer_layer: 8
+  encoder_dim: 256
+  apc_future_steps: 20
+  pre-train: false
+  pre-train_model_t: null
+  pre-train_model_s: null
+
+train:
+  train_num_workers: 8
+  test_num_workers: 4
+  lr: 0.001
+  nb_steps: 120000
+  early_stop_patience: 40
+  use_nonstream_apc: true
+  use_APC: true
+  use_cross_modal_apc: false
+  stream_weight: 1.0
+  nonstream_weight: 1.0
+  distill_weight: 0.1
+  apc_weight: 0.05
+
+
+Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep20_CMAPC
+INFO: 06/15/2025 09:48:53: epoch: 154, step: 84084/120000, train_time:223.72, test_time:14.34, average_train_loss:0.0027, average_test_nonstream_loss:0.0360, average_test_stream_loss:0.0464
+INFO: 06/15/2025 09:48:53: Nonstream ER/F/LE/LR/SELD: 0.5623/0.4139/17.6786/0.6476/0.3998
+INFO: 06/15/2025 09:48:53: Stream ER/F/LE/LR/SELD: 0.6321/0.3793/18.8889/0.6242/0.4334
+model:
+  type: 'Dualmode_seddoa_nopool_CMAPC'
+  in_channel: 7
+  in_dim: 64
+  out_dim: 39
+  att_context_size: [100,49]
+  num_conformer_layer: 8
+  encoder_dim: 256
+  apc_future_steps: 20
+  pre-train: false
+  pre-train_model_t: null
+  pre-train_model_s: null
+
+train:
+  train_num_workers: 8
+  test_num_workers: 4
+  lr: 0.001
+  nb_steps: 120000
+  early_stop_patience: 40
+  use_nonstream_apc: false
+  use_APC: true
+  use_cross_modal_apc: true
+  stream_weight: 1.0
+  nonstream_weight: 1.0
+  distill_weight: 0.1
+  apc_weight: 0.05
+
+Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Stream_Focus
+INFO: 06/20/2025 08:27:33: epoch: 112, step: 61152/120000, train_time:230.02, test_time:14.42, average_train_loss:0.0350, average_test_nonstream_loss:0.0343, average_test_stream_loss:0.0402
+INFO: 06/20/2025 08:27:33: Nonstream ER/F/LE/LR/SELD: 0.5759/0.4235/18.7089/0.6542/0.4005
+INFO: 06/20/2025 08:27:33: Stream ER/F/LE/LR/SELD: 0.6248/0.3388/20.7794/0.5900/0.4529
+model:
+  type: 'Dualmode_seddoa_nopool_APC'
+  in_channel: 7
+  in_dim: 64
+  out_dim: 39
+  att_context_size: [100,49]
+  num_conformer_layer: 8
+  encoder_dim: 256
+  apc_future_steps: 10
+  pre-train: false
+  pre-train_model_t: null
+  pre-train_model_s: null
+
+train:
+  train_num_workers: 8
+  test_num_workers: 4
+  lr: 0.0005
+  nb_steps: 120000
+  early_stop_patience: 40
+  use_APC: true
+  use_nonstream_apc: false
+  use_cross_modal_apc: true
+  stream_weight: 3.0
+  nonstream_weight: 0.5
+  distill_weight: 0.02
+  apc_weight: 0.5
+
+Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Strong_CMAPC
+INFO: 06/20/2025 09:36:21: epoch: 131, step: 71526/120000, train_time:222.42, test_time:14.15, average_train_loss:0.0132, average_test_nonstream_loss:0.0378, average_test_stream_loss:0.0423
+INFO: 06/20/2025 09:36:21: Nonstream ER/F/LE/LR/SELD: 0.5814/0.3848/18.9965/0.6502/0.4130
+INFO: 06/20/2025 09:36:21: Stream ER/F/LE/LR/SELD: 0.6406/0.3924/19.7414/0.6385/0.4299
+model:
+  type: 'Dualmode_seddoa_nopool_APC'
+  in_channel: 7
+  in_dim: 64
+  out_dim: 39
+  att_context_size: [100,49]
+  num_conformer_layer: 8
+  encoder_dim: 256
+  apc_future_steps: 15
+  pre-train: false
+  pre-train_model_t: null
+  pre-train_model_s: null
+
+train:
+  train_num_workers: 8
+  test_num_workers: 4
+  lr: 0.0008
+  nb_steps: 120000
+  early_stop_patience: 40
+  use_APC: true
+  use_nonstream_apc: false
+  use_cross_modal_apc: true
+  stream_weight: 1.5
+  nonstream_weight: 1.0
+  distill_weight: 0.05
+  apc_weight: 0.5

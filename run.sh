@@ -1,4 +1,4 @@
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=3
 
 # python test_A_dual_NS_to_S.py \
 #         -c Test_Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC_NS_to_S \
@@ -13,8 +13,8 @@ export CUDA_VISIBLE_DEVICES=1
 #         > train_logs/Train_T0.38_APC_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hidden_loss_weighted &
 
 nohup python train_A_dual_mode_cache_CrossModalAPC.py \
-        -c Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Stream_Focus \
-        > train_logs/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Stream_Focus.log &
+        -c Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_weight_finetune \
+        > train_logs/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_weight_finetune1.log &
 
 # python finetune_A_cache_chunk_limited_TS_hidstate_att_loss.py \
 #         -c Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_loss \
