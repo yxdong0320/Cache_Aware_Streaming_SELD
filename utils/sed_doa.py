@@ -259,6 +259,82 @@ class SedDoaKLLoss_2(nn.Module):
         loss_sed = loss_kl_sub1 + loss_kl_sub2
         loss = self.loss_weight[0] * loss_sed + self.loss_weight[1] * loss_doa
         return loss
+    
+class SemanticRepresentationDistillationLoss_KLLoss_2(nn.Module):
+    """
+    语义表示蒸馏损失 - 基于SedDoaKLLoss_2的形式
+    """
+    def __init__(self, loss_weight=[1.0, 10.0]):
+        super().__init__()
+        self.criterion_doa = nn.MSELoss()
+        self.loss_weight = loss_weight
+    
+    def forward(self, student_output, teacher_output):
+        """
+        Args:
+            student_output: 学生适配特征通过教师分类头的输出 [B, T, 39]
+            teacher_output: 教师特征通过教师分类头的输出 [B, T, 39]
+        """
+        # 分离SED和DOA部分
+        student_sed = student_output[:,:,:13]
+        student_doa = student_output[:,:,13:]
+        teacher_sed = teacher_output[:,:,:13]
+        teacher_doa = teacher_output[:,:,13:]
+        
+        # DOA损失计算
+        teacher_sed_repeat = teacher_sed.repeat(1,1,3)  # 适配DOA维度
+        loss_doa = self.criterion_doa(student_doa * teacher_sed_repeat, teacher_doa * teacher_sed_repeat)
+        
+        # SED损失计算
+        loss_kl_sub1 = (teacher_sed*torch.log(1e-7+teacher_sed/(1e-7+student_sed))).mean()
+        loss_kl_sub2 = ((1-teacher_sed)*torch.log(1e-7+(1-teacher_sed)/(1e-7+1-student_sed))).mean()
+        loss_sed = loss_kl_sub1 + loss_kl_sub2
+        
+        loss = self.loss_weight[0] * loss_sed + self.loss_weight[1] * loss_doa
+        return loss
+    
+class SemanticRepresentationDistillationLoss(nn.Module):
+    """
+    语义表示蒸馏损失 (Semantic Representational Distillation Loss)
+    使用教师模型的分类器作为语义批评者来评估学生表示
+    """
+    def __init__(self, loss_weight=0.1, distance_type='mse'):
+        super().__init__()
+        self.loss_weight = loss_weight
+        self.distance_type = distance_type
+        
+    def forward(self, student_features, teacher_features, teacher_classifier):
+        """
+        计算SRD损失
+        
+        Args:
+            student_features: 学生模型的特征表示 [B, T, D]
+            teacher_features: 教师模型的特征表示 [B, T, D] 
+            teacher_classifier: 教师模型的分类器
+            
+        Returns:
+            srd_loss: 语义表示蒸馏损失
+        """
+        # 获取教师模型的logits
+        with torch.no_grad():
+            teacher_logits = teacher_classifier(teacher_features)
+            
+        # 通过教师分类器获取学生特征的cross-network logits
+        student_cross_logits = teacher_classifier(student_features)
+        
+        # 计算损失
+        if self.distance_type == 'mse':
+            # MSE损失 - 直接在logit空间对齐
+            srd_loss = F.mse_loss(student_cross_logits, teacher_logits.detach())
+        elif self.distance_type == 'kl':
+            # KL散度损失 - 在概率空间对齐
+            teacher_probs = F.softmax(teacher_logits.detach(), dim=-1)
+            student_probs = F.log_softmax(student_cross_logits, dim=-1)
+            srd_loss = F.kl_div(student_probs, teacher_probs, reduction='batchmean')
+        else:
+            raise ValueError(f"Unsupported distance type: {self.distance_type}")
+            
+        return srd_loss * self.loss_weight
 
 class SedDoaKLLoss_3(nn.Module):
     def __init__(self, loss_weight=[1.0, 10.0]):

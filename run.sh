@@ -1,20 +1,20 @@
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=3
 
 # python test_A_dual_NS_to_S.py \
 #         -c Test_Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC_NS_to_S \
 #         -m results/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC/checkpoints/checkpoint_epoch165_step90090.pth
 
 # nohup python finetune_A_cache_chunk_limited_TS_hidstate_att_loss.py \
-#         -c Finetune_T0.38_APC_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hidden_loss_weighted \
-#         > train_logs/Finetune_T0.38_APC_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hidden_loss_weighted.log &
+#         -c Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_SRD_logits_loss \
+#         > train_logs/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_SRD_logits_loss.log &
 
-# nohup python train_A_cache_chunk_limited_TS_hidstate_att_loss.py \
-#         -c Train_T0.38_APC_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hidden_loss_weighted \
-#         > train_logs/Train_T0.38_APC_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hidden_loss_weighted &
+nohup python train_A_cache_chunk_limited_TS_hidstate_att_srd_loss.py \
+        -c Train_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_srd_loss \
+        > train_logs/Train_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_srd_loss.log &
 
-nohup python train_A_dual_mode_cache_CrossModalAPC.py \
-        -c Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC_tristage_weight \
-        > train_logs/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC_tristage_weight.log &
+# nohup python train_A_dual_mode_cache_CrossModalAPC.py \
+#         -c Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC_tristage_weight \
+#         > train_logs/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC_tristage_weight.log &
 
 # python finetune_A_cache_chunk_limited_TS_hidstate_att_loss.py \
 #         -c Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_loss \

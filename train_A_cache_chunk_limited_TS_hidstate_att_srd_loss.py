@@ -11,13 +11,14 @@ import pdb
 
 from lmdb_data_loader_A import LmdbDataset
 
-from models.cache_resnet_conformer_TS import ResnetConformer_sed_doa_nopool_TS_hidstate_att_loss
+from models.cache_resnet_conformer_TS import ResnetConformer_sed_doa_nopool_TS_hidstate_att_loss, ResnetConformer_sed_doa_nopool_TS_hidstate_att_srd_loss
 from lr_scheduler.tri_stage_lr_scheduler import TriStageLRScheduler
 from utils.cls_tools.cls_compute_seld_results import ComputeSELDResults
 from utils.write_csv import write_output_format_file
 from utils.sed_doa import SedDoaResult, process_foa_input_sed_doa_labels, SedDoaLoss, SedDoaKLLoss_2
 from utils.sed_doa import HiddenStateMSELoss, AttentionMapMSELoss, HiddenStateMSELoss_weighted
 from utils.sed_doa import HiddenStateMSELoss_norm, SimpleAttentionDivergenceLoss, HiddenStateCosineLoss
+from utils.sed_doa import SemanticRepresentationDistillationLoss, SemanticRepresentationDistillationLoss_KLLoss_2
 
 
 def set_random_seed(seed):
@@ -41,6 +42,7 @@ def main(args):
     use_hidden_distill = args['train'].get('use_hidden_distill', True)
     use_attn_distill = args['train'].get('use_attn_distill', True)
     use_ts_distill = args['train'].get('use_ts_distill', True)
+    use_srd_distill = args['train'].get('use_srd_distill', False)  # 新增SRD控制
     hidden_distill_weighted = args['train'].get('hidden_distill_weighted', False)
 
     criterion = SedDoaLoss(loss_weight=[0.1,1])
@@ -57,7 +59,9 @@ def main(args):
         # attn_criterion = SimpleAttentionDivergenceLoss(loss_weight=args['train'].get('attn_loss_weight', 0.05))
     if use_ts_distill:
         kl_criterion = SedDoaKLLoss_2(loss_weight=[0.1, 1]) 
-    model = ResnetConformer_sed_doa_nopool_TS_hidstate_att_loss(
+    if use_srd_distill:
+        srd_criterion = SemanticRepresentationDistillationLoss_KLLoss_2(loss_weight=[0.1, 1])
+        model = ResnetConformer_sed_doa_nopool_TS_hidstate_att_srd_loss(
             in_channel=args['model']['in_channel'], 
             in_dim=args['model']['in_dim'], 
             out_dim=args['model']['out_dim'],
@@ -66,7 +70,19 @@ def main(args):
             encoder_dim=args['model']['encoder_dim'],
             use_hidden_distill=use_hidden_distill,
             use_attn_distill=use_attn_distill,
+            use_srd_distill=use_srd_distill,  # 新增参数
             )
+    else:
+        model = ResnetConformer_sed_doa_nopool_TS_hidstate_att_loss(
+                in_channel=args['model']['in_channel'], 
+                in_dim=args['model']['in_dim'], 
+                out_dim=args['model']['out_dim'],
+                att_context_size=args['model']['att_context_size'],
+                num_conformer_layer=args['model']['num_conformer_layer'],
+                encoder_dim=args['model']['encoder_dim'],
+                use_hidden_distill=use_hidden_distill,
+                use_attn_distill=use_attn_distill,
+                )
 
     # 训练集初始化
     train_split = [1,2,3]
@@ -135,6 +151,24 @@ def main(args):
             print('成功加载学生模型')
         else:
             print('学生模型从头开始训练')
+        
+        # **新增：feature_adapter恒等映射初始化**
+        if use_srd_distill and hasattr(model, 'feature_adapter'):
+            print("正在为feature_adapter应用恒等映射初始化...")
+            linear_layers = [module for module in model.feature_adapter.modules() if isinstance(module, nn.Linear)]
+            
+            for i, module in enumerate(linear_layers):
+                if i == 0:  # 第一个Linear层使用恒等映射
+                    print(f"  Linear层 {i}: 恒等映射初始化 (weight shape: {module.weight.shape})")
+                    nn.init.eye_(module.weight)
+                    if module.bias is not None:
+                        nn.init.zeros_(module.bias)
+                else:  # 其他Linear层使用Xavier初始化
+                    print(f"  Linear层 {i}: Xavier初始化 (weight shape: {module.weight.shape})")
+                    nn.init.xavier_uniform_(module.weight)
+                    if module.bias is not None:
+                        nn.init.zeros_(module.bias)
+            print("feature_adapter恒等映射初始化完成")
 
     # 优化器初始化
     optimizer = optim.Adam(model.parameters(), lr=args['train']['lr'])
@@ -166,25 +200,33 @@ def main(args):
             target = data['target'].to(device)
             optimizer.zero_grad()
 
-            # 根据模型配置获取不同的输出
-            if use_hidden_distill and use_attn_distill:
-                output, target_ts, (teacher_hidden, student_hidden), (teacher_attns, student_attns) = model(input)
-            elif use_hidden_distill:
-                output, target_ts, (teacher_hidden, student_hidden) = model(input)
-            elif use_attn_distill:
-                output, target_ts, (teacher_attns, student_attns) = model(input)
-            else:
-                output, target_ts = model(input)
+            # **修改：根据模型配置获取不同的输出**
+            model_outputs = model(input)
+            output = model_outputs[0]
+            target_ts = model_outputs[1]
+            
+            # **修改：解析模型输出**
+            output_idx = 2
+            teacher_hidden, student_hidden = None, None
+            teacher_attns, student_attns = None, None
+            student_cross_output, teacher_cross_output = None, None
+            
+            if use_hidden_distill:
+                teacher_hidden, student_hidden = model_outputs[output_idx]
+                output_idx += 1
+                
+            if use_attn_distill:
+                teacher_attns, student_attns = model_outputs[output_idx]
+                output_idx += 1
+                
+            # **新增：解析SRD输出**
+            if use_srd_distill:
+                student_cross_output, teacher_cross_output = model_outputs[output_idx]
+                output_idx += 1
 
             # 计算各项损失
             task_loss = criterion(output, target)
-
             total_loss = task_loss.clone()
-
-            # if step_count  == 99:
-            #     print('1')
-            #     pdb.set_trace()
-            # pdb.set_trace()
 
             if use_ts_distill:
                 kl_loss = kl_criterion(output, target_ts)
@@ -199,8 +241,11 @@ def main(args):
             if use_attn_distill:
                 attn_loss = attn_criterion(teacher_attns, student_attns)
                 total_loss += attn_loss
-
-            # pdb.set_trace()
+                
+            # **新增：如果启用SRD蒸馏，计算SRD损失**
+            if use_srd_distill:
+                srd_loss = srd_criterion(student_cross_output, teacher_cross_output)
+                total_loss += srd_loss * args['train']['srd_loss_weight']
             
             total_loss.backward()
             optimizer.step()
@@ -210,7 +255,6 @@ def main(args):
 
             # 记录训练日志
             if step_count % args['result']['log_interval'] == 0:
-                # pdb.set_trace()
                 lr = optimizer.param_groups[0]['lr']
                 log_message = f'epoch: {epoch_count}, step: {step_count}/{total_steps}, lr:{lr:.6f}, train_loss:{total_loss.item():.4f}'
                 
@@ -222,6 +266,8 @@ def main(args):
                     log_message += f', hidden_loss:{hidden_loss.item():.4f}'
                 if use_attn_distill:
                     log_message += f', attn_loss:{attn_loss.item():.4f}'
+                if use_srd_distill:
+                    log_message += f', srd_loss:{srd_loss.item():.4f}'
                     
                 logger.info(log_message)
                 
@@ -241,14 +287,11 @@ def main(args):
             input = data['input'].to(device)
             target = data['target'].to(device)
             with torch.no_grad():
-                if use_hidden_distill and use_attn_distill:
-                    output, target_ts, _, _ = model(input)
-                elif use_hidden_distill or use_attn_distill:
-                    output, target_ts, _ = model(input)
-                else:
-                    output, target_ts = model(input)
+                model_outputs = model(input)
+                output = model_outputs[0]
+                target_ts = model_outputs[1]
+
                 task_loss = criterion(output, target)
-                # kl_loss = kl_criterion(output, target_ts)
                 test_loss.append(task_loss.item())
 
             test_result.add_items(data['wav_names'], output)
