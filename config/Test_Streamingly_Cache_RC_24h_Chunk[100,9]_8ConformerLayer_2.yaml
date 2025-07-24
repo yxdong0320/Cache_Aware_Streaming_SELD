@@ -13,15 +13,15 @@ model:
   in_channel: 7
   in_dim: 64
   out_dim: 39
-  att_context_size: [100,9]
+  att_context_size: [100,4]
   num_conformer_layer: 8
   encoder_dim: 256
   pre-train: True
-  pre-train_model: 'test_models/Cache_RC_24h_Chunk[100,9]_8Conformer_Best.pth'
+  pre-train_model: 'test_models/RC_24h_Chunk[100,49]_8Conformer_Best.pth'
 
 result:
-  log_output_path: 'results/Test_Streamingly_Cache_RC_24h_Chunk[100,9]_8ConformerLayer_2/train.log'
+  log_output_path: 'results/Test_Streamingly_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_3/train.log'
   log_interval: 100
-  dcase_output_dir: 'results/Test_Streamingly_Cache_RC_24h_Chunk[100,9]_8ConformerLayer_2/results'
+  dcase_output_dir: 'results/Test_Streamingly_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_3/results'
 
 

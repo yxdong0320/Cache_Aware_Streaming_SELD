@@ -1,0 +1,49 @@
+data:
+  train_lmdb_dir: '/disk6/yxdong/Dcase2023/synth_real_data/combine_synth_real/lmdb_foa_dev_data_label_len10s'
+  test_lmdb_dir: '/disk6/yxdong/Dcase2023/synth_real_data/combine_synth_real/lmdb_test_foa_dev_data_label_len10s'
+  ref_files_dir: 'dataset/metadata_dev_test'
+  norm_file: 'dataset/24h_ACS_foa_wts'
+  segment_len: 100
+  select_num: 10  # video per seconds
+  batch_size: 32
+  train_ignore: 'enh' # No ACS
+  test_ignore: 'enh'
+
+model:
+  type: 'finetune_seddoa_nopool_ts_cache_t'
+  in_channel: 7
+  in_dim: 64
+  out_dim: 39
+  att_context_size: [100,4]
+  use_cache_as_T: True
+  s_load_t_params: False
+  T_att_context_size: [100,49]
+  num_conformer_layer: 8
+  encoder_dim: 256
+  pre-train: True
+  pre-train_model_t: 'test_models/RC_24h_Chunk[100,49]_8Conformer_Best.pth'
+  pre-train_model_s: 'test_models/RC_24h_Chunk[100,4]_8Conformer_Best.pth'
+
+train:
+  train_num_workers: 8
+  test_num_workers: 4
+  lr: 0.0004
+  kl_gamma: [1, 0.5]
+  nb_steps: 60000
+  use_ts_distill: true
+  use_hidden_distill: true  # 是否使用隐藏层蒸馏
+  hidden_distill_layer_weight: [0, 0, 0, 0, 0, 0, 0, 1]
+  use_attn_distill: false    # 是否使用注意力图蒸馏
+  use_srd_distill: false
+  ts_loss_weight: 0.5
+  hidden_loss_weight: 0.0004   # 隐藏层损失权重
+  attn_loss_weight: 0.05    # 注意力图损失权重
+  srd_loss_weight: 0.5
+
+result:
+  log_output_path: 'results/Finetune_T[100,49]_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hidden_ts_cache_t/train.log'
+  log_interval: 100
+  checkpoint_output_dir: 'results/Finetune_T[100,49]_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hidden_ts_cache_t/checkpoints'
+  dcase_output_dir: 'results/Finetune_T[100,49]_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hidden_ts_cache_t/results'
+
+

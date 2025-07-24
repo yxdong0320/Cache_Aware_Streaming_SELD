@@ -12,13 +12,48 @@ import pdb
 from lmdb_data_loader_A import LmdbDataset
 
 from models.cache_resnet_conformer_TS import ResnetConformer_sed_doa_nopool_TS_hidstate_att_loss, ResnetConformer_sed_doa_nopool_TS_hidstate_att_srd_loss
+from models.cache_resnet_conformer_TS import ResnetConformer_sed_doa_nopool_Cache_TS_hidstate_att_loss
 from lr_scheduler.tri_stage_lr_scheduler import TriStageLRScheduler
 from utils.cls_tools.cls_compute_seld_results import ComputeSELDResults
 from utils.write_csv import write_output_format_file
 from utils.sed_doa import SedDoaResult, process_foa_input_sed_doa_labels, SedDoaLoss, SedDoaKLLoss_2
 from utils.sed_doa import HiddenStateMSELoss, AttentionMapMSELoss, HiddenStateMSELoss_weighted
 from utils.sed_doa import HiddenStateMSELoss_norm, SimpleAttentionDivergenceLoss, HiddenStateCosineLoss
-from utils.sed_doa import SemanticRepresentationDistillationLoss, SemanticRepresentationDistillationLoss_KLLoss_2
+from utils.sed_doa import SemanticRepresentationDistillationLoss_KLLoss_2
+
+
+def check_parameter_compatibility(teacher_dict, student_dict, model_name="模型"):
+    """检查教师模型参数与学生模型的兼容性"""
+    compatible_keys = []
+    incompatible_keys = []
+    missing_keys = []
+    
+    print(f"\n=== {model_name}参数兼容性检测 ===")
+    
+    # 检查教师模型参数在学生模型中的兼容性
+    for key in teacher_dict.keys():
+        if key in student_dict:
+            teacher_shape = teacher_dict[key].shape
+            student_shape = student_dict[key].shape
+            
+            if teacher_shape == student_shape:
+                compatible_keys.append(key)
+            else:
+                incompatible_keys.append((key, teacher_shape, student_shape))
+                print(f"⚠️  参数形状不匹配: {key}")
+                print(f"   教师模型: {teacher_shape}, 学生模型: {student_shape}")
+        else:
+            missing_keys.append(key)
+    
+    # 打印统计信息
+    print(f"✅ 兼容参数: {len(compatible_keys)}")
+    print(f"⚠️  形状不匹配: {len(incompatible_keys)}")
+    print(f"❌ 缺失参数: {len(missing_keys)}")
+    
+    if missing_keys:
+        print(f"缺失的参数键: {missing_keys[:5]}{'...' if len(missing_keys) > 5 else ''}")
+    
+    return compatible_keys, incompatible_keys, missing_keys
 
 
 def set_random_seed(seed):
@@ -72,11 +107,18 @@ def main(args):
             use_attn_distill=use_attn_distill,
             use_srd_distill=use_srd_distill,  # 新增参数
             )
-    # if use_srd_distill:
-        # srd_criterion = SemanticRepresentationDistillationLoss(
-        #     loss_weight=args['train'].get('srd_loss_weight', 0.1),
-        #     distance_type=args['train'].get('srd_distance_type', 'mse')
-        # )
+    elif args['model']['use_cache_as_T']:
+        model = ResnetConformer_sed_doa_nopool_Cache_TS_hidstate_att_loss(
+                in_channel=args['model']['in_channel'], 
+                in_dim=args['model']['in_dim'], 
+                out_dim=args['model']['out_dim'],
+                att_context_size=args['model']['att_context_size'],
+                num_conformer_layer=args['model']['num_conformer_layer'],
+                encoder_dim=args['model']['encoder_dim'],
+                T_att_context_size = args['model']['T_att_context_size'],
+                use_hidden_distill=use_hidden_distill,
+                use_attn_distill=use_attn_distill,
+                )
     else:
         model = ResnetConformer_sed_doa_nopool_TS_hidstate_att_loss(
                 in_channel=args['model']['in_channel'], 
@@ -119,8 +161,24 @@ def main(args):
         model_dict = model.state_dict()
         model_dict_t = model.teacher_model.state_dict()
         pretrained_dict_t = torch.load(args['model']['pre-train_model_t'], map_location=device)
-        pretrained_dict_s = torch.load(args['model']['pre-train_model_s'], map_location=device)
+
+        s_load_t_params = args['model'].get('s_load_t_params', False)
+        if s_load_t_params:
+            # 如果s_load_t_params为True，则将教师模型的参数加载到学生模型中
+            print(f'正在加载教师模型参数到学生模型...')
+            pretrained_dict_s = torch.load(args['model']['pre-train_model_t'], map_location=device)
+                    # **新增：检测教师模型参数与学生模型的兼容性**
+            compatible_keys, incompatible_keys, missing_keys = check_parameter_compatibility(
+                pretrained_dict_s, model_dict, "教师->学生"
+            )
+            
+            # 如果有不兼容的参数，给出警告
+            if incompatible_keys:
+                print(f"\n⚠️  警告: 发现 {len(incompatible_keys)} 个参数形状不匹配，将跳过这些参数")
+        else:
+            pretrained_dict_s = torch.load(args['model']['pre-train_model_s'], map_location=device)
         
+
         # 加载学生模型时只加载存在的键
         key_list = [key for key in pretrained_dict_s.keys()]  
         for key in key_list:
@@ -164,55 +222,6 @@ def main(args):
             print("feature_adapter恒等映射初始化完成")
         
         print('成功加载教师和学生模型')
-
-    # if args['model']['pre-train']:
-    #     model_dict = model.state_dict()  # 获取当前模型的所有参数
-    #     model_dict_t = model.teacher_model.state_dict()
-    #     pretrained_dict_t = torch.load(args['model']['pre-train_model_t'], map_location=device)
-    #     pretrained_dict_s = torch.load(args['model']['pre-train_model_s'], map_location=device)
-        
-    #     # 加载学生模型（保持原有逻辑）
-    #     key_list = [key for key in pretrained_dict_s.keys()]  
-    #     for key in key_list:
-    #         model_dict[key] = pretrained_dict_s[key]
-        
-    #     # 加载教师模型，根据预训练模型路径判断是否忽略APC层
-    #     key_list_t = [key for key in pretrained_dict_t.keys()]
-        
-    #     # 检查教师模型路径是否包含'APC'关键字
-    #     if 'APC' in args['model']['pre-train_model_t']:
-    #         # 过滤掉包含'apc'的层（忽略大小写）
-    #         filtered_key_list_t = [key for key in key_list_t if 'apc' not in key.lower()]
-    #         print(f"检测到APC模型, 忽略了 {len(key_list_t) - len(filtered_key_list_t)} 个APC相关层")
-            
-    #         for key in filtered_key_list_t:
-    #             if key in model_dict_t:  # 确保目标模型中存在该层
-    #                 model_dict_t[key] = pretrained_dict_t[key]
-    #             else:
-    #                 print(f"警告: 目标模型中不存在层 {key}")
-    #     else:
-    #         # 原有逻辑：加载所有层
-    #         for key in key_list_t:
-    #             model_dict_t[key] = pretrained_dict_t[key]
-        
-    #     model.load_state_dict(model_dict)
-    #     model.teacher_model.load_state_dict(model_dict_t, strict=False)  # 使用strict=False避免缺少APC层时报错
-    #     print('成功加载教师和学生模型')
-
-    # if args['model']['pre-train']:
-    #     model_dict = model.state_dict()  # 获取当前模型的所有参数
-    #     model_dict_t = model.teacher_model.state_dict()
-    #     pretrained_dict_t = torch.load(args['model']['pre-train_model_t'], map_location=device)
-    #     pretrained_dict_s = torch.load(args['model']['pre-train_model_s'], map_location=device)
-    #     key_list = [key for key in pretrained_dict_s.keys()]  
-    #     for key in key_list:
-    #         model_dict[key] = pretrained_dict_s[key]
-    #     key_list_t = [key for key in pretrained_dict_t.keys()] 
-    #     for key in key_list_t:
-    #         model_dict_t[key] = pretrained_dict_t[key]
-    #     model.load_state_dict(model_dict)
-    #     model.teacher_model.load_state_dict(model_dict_t)
-    #     print('成功加载教师和学生模型')
 
     # 优化器初始化
     optimizer = optim.Adam(model.parameters(), lr=args['train']['lr'])
