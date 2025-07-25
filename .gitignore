@@ -2,3 +2,4 @@ dataset/
 train_logs/
 results/
 __pycache__/
+analysis_results/
