@@ -36,10 +36,14 @@ def main(args):
     data_process_fn = process_foa_input_sed_doa_labels
     result_class = SedDoaResult
     criterion = SedDoaLoss(loss_weight=[0.1,1])
+    apc_loss_f = args['model'].get('apc_loss_f', 'L1')
+    print('apc_loss_f: {}'.format(apc_loss_f))
+
     model = ResnetConformer_sed_doa_nopool(in_channel=args['model']['in_channel'], 
                                                 in_dim=args['model']['in_dim'], 
                                                 out_dim=args['model']['out_dim'],
                                                 apc_future_steps=args['model']['apc_future_steps'],
+                                                loss_f=apc_loss_f,
                                                 )
 
     # 训练集初始化

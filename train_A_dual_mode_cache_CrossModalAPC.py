@@ -39,6 +39,8 @@ def main(args):
     data_process_fn = process_foa_input_sed_doa_labels
     result_class = SedDoaResult
     criterion = SedDoaLoss(loss_weight=[0.1,1])
+    apc_loss_f = args['model'].get('apc_loss_f', 'L1')
+    print('apc_loss_f: {}'.format(apc_loss_f))
     model = DualModeResnetConformerCrossModalAPC(
         in_channel=args['model']['in_channel'], 
         in_dim=args['model']['in_dim'], 
@@ -48,7 +50,8 @@ def main(args):
         encoder_dim=args['model']['encoder_dim'],
         apc_future_steps=args['model']['apc_future_steps'],
         use_nonstream_apc=args['train'].get('use_nonstream_apc', False),  # 从train配置中读取
-    )
+        loss_f=apc_loss_f,
+        )
     # 训练集初始化
     train_split = [1,2,3]
     train_dataset = LmdbDataset(args['data']['train_lmdb_dir'], train_split, normalized_features_wts_file=args['data']['norm_file'],

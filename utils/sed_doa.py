@@ -411,6 +411,36 @@ class HiddenStateMSELoss_weighted(nn.Module):
             
         # 计算所有层的平均损失并应用权重
         return (total_loss / sum(self.layer_weights)) * self.loss_weight
+    
+class AttentionMapMSELoss_weighted(nn.Module):
+    def __init__(self, loss_weight=0.05, layer_weights=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]):
+        super().__init__()
+        self.loss_weight = loss_weight
+        self.mse_loss = nn.MSELoss()
+        self.layer_weights = layer_weights
+        
+    def forward(self, teacher_attn_maps, student_attn_maps):
+        """
+        计算教师模型和学生模型注意力图之间的MSE损失
+        
+        Args:
+            teacher_attn_maps: 教师模型各层的注意力图列表
+            student_attn_maps: 学生模型各层的注意力图列表
+            
+        Returns:
+            loss: 加权平均的MSE损失
+        """
+        total_loss = 0
+        num_layers = len(teacher_attn_maps)
+        
+        for i in range(num_layers):
+            # 注意：这里假设注意力图有相同的维度
+            # 如果维度不同，需要进行截断或填充处理
+            layer_loss = self.mse_loss(teacher_attn_maps[i], student_attn_maps[i])
+            total_loss += layer_loss * self.layer_weights[i]
+            
+        # 计算所有层的平均损失并应用权重
+        return (total_loss / sum(self.layer_weights)) * self.loss_weight
 
 class AttentionMapMSELoss(nn.Module):
     def __init__(self, loss_weight=0.05):

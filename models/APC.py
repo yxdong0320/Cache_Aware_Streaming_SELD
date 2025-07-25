@@ -3,10 +3,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class APCModule(nn.Module):
-    def __init__(self, input_dim, future_steps=3):
+    def __init__(self, input_dim, future_steps=3, loss_f = 'L1'):
         super(APCModule, self).__init__()
         self.input_dim = input_dim
         self.future_steps = future_steps
+        self.loss_f = loss_f
          
         # APC预测器 - 预测未来的表示用于自回归学习
         self.apc_predictors = nn.ModuleList([
@@ -41,9 +42,12 @@ class APCModule(nn.Module):
             
             # 使用线性预测器预测未来
             predicted = self.apc_predictors[k-1](current)
-            
-            # 计算L1损失
-            step_loss = F.l1_loss(predicted, future)
+            if self.loss_f == 'L1':
+                # 计算L1损失
+                step_loss = F.l1_loss(predicted, future)
+            elif self.loss_f == 'MSE':
+                # 计算MSE损失
+                step_loss = F.mse_loss(predicted, future)
             total_loss += step_loss
             
         return total_loss / self.future_steps if self.future_steps > 0 else 0.0
@@ -61,6 +65,7 @@ class APCModule(nn.Module):
         apc_loss = self.compute_apc_loss(features)
         
         return apc_loss
+    
     
 class CrossModalAPCModule(nn.Module):
     """

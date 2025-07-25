@@ -6,7 +6,7 @@ from .conformer import ConformerBlock
 from .APC import APCModule
 
 class ResnetConformer_sed_doa_nopool(nn.Module):
-    def __init__(self, in_channel, in_dim, out_dim, apc_future_steps = 3):
+    def __init__(self, in_channel, in_dim, out_dim, apc_future_steps = 3, loss_f = 'L1'):
         super().__init__()
         self.resnet = resnet18_nopool(in_channel=in_channel)
         embedding_dim = in_dim // 32 * 256
@@ -45,6 +45,7 @@ class ResnetConformer_sed_doa_nopool(nn.Module):
         self.apc = APCModule(
             input_dim=encoder_dim,
             future_steps=apc_future_steps,
+            loss_f = loss_f,
         )
     def forward(self, x):
         conv_outputs = self.resnet(x)

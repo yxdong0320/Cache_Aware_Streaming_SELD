@@ -287,6 +287,7 @@ class DualModeResnetConformerCrossModalAPC(nn.Module):
         encoder_dim=256,
         apc_future_steps=5,
         use_nonstream_apc=True,  # 是否使用非流式自监督APC
+        loss_f = 'L1'
     ):
         super().__init__()
         # 双模态ResNet
@@ -352,6 +353,7 @@ class DualModeResnetConformerCrossModalAPC(nn.Module):
             self.nonstream_apc = APCModule(
                 input_dim=self.encoder_dim,
                 future_steps=apc_future_steps,
+                loss_f = loss_f
             )
 
     def get_initial_cache_resnet(self, batch_size=1):

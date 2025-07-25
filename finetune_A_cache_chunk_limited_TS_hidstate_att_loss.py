@@ -17,7 +17,7 @@ from lr_scheduler.tri_stage_lr_scheduler import TriStageLRScheduler
 from utils.cls_tools.cls_compute_seld_results import ComputeSELDResults
 from utils.write_csv import write_output_format_file
 from utils.sed_doa import SedDoaResult, process_foa_input_sed_doa_labels, SedDoaLoss, SedDoaKLLoss_2
-from utils.sed_doa import HiddenStateMSELoss, AttentionMapMSELoss, HiddenStateMSELoss_weighted
+from utils.sed_doa import HiddenStateMSELoss, AttentionMapMSELoss, HiddenStateMSELoss_weighted, AttentionMapMSELoss_weighted
 from utils.sed_doa import HiddenStateMSELoss_norm, SimpleAttentionDivergenceLoss, HiddenStateCosineLoss
 from utils.sed_doa import SemanticRepresentationDistillationLoss_KLLoss_2
 
@@ -79,6 +79,8 @@ def main(args):
     use_ts_distill = args['train'].get('use_ts_distill', True)
     use_srd_distill = args['train'].get('use_srd_distill', False)  # 新增SRD控制
     hidden_distill_weighted = args['train'].get('hidden_distill_weighted', False)
+    att_distill_weighted = args['train'].get('att_distill_weighted', False)
+    use_cache_as_T = args['model'].get('use_cache_as_T', False)
 
     criterion = SedDoaLoss(loss_weight=[0.1,1])
     # 添加隐藏层和注意力图的损失函数
@@ -89,8 +91,13 @@ def main(args):
         hidden_criterion = HiddenStateMSELoss_weighted(loss_weight=args['train'].get('hidden_loss_weight', 0.2),
                                                        layer_weights=hidden_distill_layer_weight)
         # hidden_criterion = HiddenStateMSELoss_norm(loss_weight=args['train'].get('hidden_loss_weight', 0.2))
-    if use_attn_distill:
+    if use_attn_distill and not att_distill_weighted:
         attn_criterion = AttentionMapMSELoss(loss_weight=args['train'].get('attn_loss_weight', 0.05))
+        # attn_criterion = SimpleAttentionDivergenceLoss(loss_weight=args['train'].get('attn_loss_weight', 0.05))
+    elif use_attn_distill and att_distill_weighted:
+        attn_distill_layer_weight = args['train'].get('attn_distill_layer_weight', [1, 1, 1, 1, 1, 1, 1, 1])
+        attn_criterion = AttentionMapMSELoss_weighted(loss_weight=args['train'].get('attn_loss_weight', 0.05),
+                                                      layer_weights=attn_distill_layer_weight)
         # attn_criterion = SimpleAttentionDivergenceLoss(loss_weight=args['train'].get('attn_loss_weight', 0.05))
     if use_ts_distill:
         kl_criterion = SedDoaKLLoss_2(loss_weight=[0.1, 1]) 
@@ -107,7 +114,7 @@ def main(args):
             use_attn_distill=use_attn_distill,
             use_srd_distill=use_srd_distill,  # 新增参数
             )
-    elif args['model']['use_cache_as_T']:
+    elif use_cache_as_T:
         model = ResnetConformer_sed_doa_nopool_Cache_TS_hidstate_att_loss(
                 in_channel=args['model']['in_channel'], 
                 in_dim=args['model']['in_dim'], 
