@@ -35,12 +35,12 @@ train:
   stream_weight: 1.0
   nonstream_weight: 1.0
   distill_weight: 0.1
-  apc_weight: 0.05
+  apc_weight: 0.10
 
 result:
-  log_output_path: 'results/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC_MSELoss/train.log'
+  log_output_path: 'results/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC_MSELoss_3/train.log'
   log_interval: 100
-  checkpoint_output_dir: 'results/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC_MSELoss/checkpoints'
-  dcase_output_dir: 'results/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC_MSELoss/results'
+  checkpoint_output_dir: 'results/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC_MSELoss_3/checkpoints'
+  dcase_output_dir: 'results/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC_MSELoss_3/results'
 
 

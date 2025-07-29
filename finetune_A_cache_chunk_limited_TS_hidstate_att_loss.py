@@ -12,7 +12,7 @@ import pdb
 from lmdb_data_loader_A import LmdbDataset
 
 from models.cache_resnet_conformer_TS import ResnetConformer_sed_doa_nopool_TS_hidstate_att_loss, ResnetConformer_sed_doa_nopool_TS_hidstate_att_srd_loss
-from models.cache_resnet_conformer_TS import ResnetConformer_sed_doa_nopool_Cache_TS_hidstate_att_loss
+from models.cache_resnet_conformer_TS import ResnetConformer_sed_doa_nopool_Cache_TS_hidstate_att_loss, ResnetConformer_sed_doa_nopool_TS_hidstate_att_CMAPC
 from lr_scheduler.tri_stage_lr_scheduler import TriStageLRScheduler
 from utils.cls_tools.cls_compute_seld_results import ComputeSELDResults
 from utils.write_csv import write_output_format_file
@@ -78,6 +78,7 @@ def main(args):
     use_attn_distill = args['train'].get('use_attn_distill', True)
     use_ts_distill = args['train'].get('use_ts_distill', True)
     use_srd_distill = args['train'].get('use_srd_distill', False)  # 新增SRD控制
+    use_CMAPC_distill = args['train'].get('use_CMAPC_distill', False) 
     hidden_distill_weighted = args['train'].get('hidden_distill_weighted', False)
     att_distill_weighted = args['train'].get('att_distill_weighted', False)
     use_cache_as_T = args['model'].get('use_cache_as_T', False)
@@ -126,6 +127,19 @@ def main(args):
                 use_hidden_distill=use_hidden_distill,
                 use_attn_distill=use_attn_distill,
                 )
+    elif use_CMAPC_distill:
+        model = ResnetConformer_sed_doa_nopool_TS_hidstate_att_CMAPC(
+            in_channel=args['model']['in_channel'], 
+            in_dim=args['model']['in_dim'], 
+            out_dim=args['model']['out_dim'],
+            att_context_size=args['model']['att_context_size'],
+            num_conformer_layer=args['model']['num_conformer_layer'],
+            encoder_dim = args['model']['encoder_dim'],
+            use_hidden_distill = use_hidden_distill,
+            use_attn_distill = use_attn_distill,
+            use_CMAPC_distill = use_CMAPC_distill,
+            CMAPC_future_steps = args['model']['apc_future_steps'],
+            )
     else:
         model = ResnetConformer_sed_doa_nopool_TS_hidstate_att_loss(
                 in_channel=args['model']['in_channel'], 
@@ -278,6 +292,10 @@ def main(args):
             if use_attn_distill:
                 teacher_attns, student_attns = model_outputs[output_idx]
                 output_idx += 1
+
+            if use_CMAPC_distill:
+                cross_modal_apc_loss = model_outputs[output_idx]
+                output_idx += 1
                 
             # **新增：解析SRD输出**
             if use_srd_distill:
@@ -301,11 +319,16 @@ def main(args):
             if use_attn_distill:
                 attn_loss = attn_criterion(teacher_attns, student_attns)
                 total_loss += attn_loss
+
+            if use_CMAPC_distill:
+                weighted_CMAPC_loss = cross_modal_apc_loss * args['train']['CMAPC_loss_weight']
+                total_loss += weighted_CMAPC_loss
                 
             # **新增：如果启用SRD蒸馏，计算SRD损失**
             if use_srd_distill:
                 srd_loss = srd_criterion(student_cross_output, teacher_cross_output)
-                total_loss += srd_loss * args['train']['srd_loss_weight']
+                weighted_srd_loss = srd_loss * args['train']['srd_loss_weight']
+                total_loss += weighted_srd_loss
 
             # # 根据模型配置获取不同的输出
             # if use_hidden_distill and use_attn_distill:
@@ -339,8 +362,10 @@ def main(args):
                     log_message += f', hidden_loss:{hidden_loss.item():.4f}'
                 if use_attn_distill:
                     log_message += f', attn_loss:{attn_loss.item():.4f}'
+                if use_CMAPC_distill:
+                    log_message += f', CMAPC_loss:{weighted_CMAPC_loss.item():.4f}'
                 if use_srd_distill:
-                    log_message += f', srd_loss:{srd_loss.item():.4f}'
+                    log_message += f', srd_loss:{weighted_srd_loss.item():.4f}'
                     
                 logger.info(log_message)
                 

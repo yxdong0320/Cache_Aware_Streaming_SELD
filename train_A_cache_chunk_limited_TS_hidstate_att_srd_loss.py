@@ -12,11 +12,12 @@ import pdb
 from lmdb_data_loader_A import LmdbDataset
 
 from models.cache_resnet_conformer_TS import ResnetConformer_sed_doa_nopool_TS_hidstate_att_loss, ResnetConformer_sed_doa_nopool_TS_hidstate_att_srd_loss
+from models.cache_resnet_conformer_TS import ResnetConformer_sed_doa_nopool_Cache_TS_hidstate_att_loss, ResnetConformer_sed_doa_nopool_TS_hidstate_att_CMAPC
 from lr_scheduler.tri_stage_lr_scheduler import TriStageLRScheduler
 from utils.cls_tools.cls_compute_seld_results import ComputeSELDResults
 from utils.write_csv import write_output_format_file
 from utils.sed_doa import SedDoaResult, process_foa_input_sed_doa_labels, SedDoaLoss, SedDoaKLLoss_2
-from utils.sed_doa import HiddenStateMSELoss, AttentionMapMSELoss, HiddenStateMSELoss_weighted
+from utils.sed_doa import HiddenStateMSELoss, AttentionMapMSELoss, HiddenStateMSELoss_weighted, AttentionMapMSELoss_weighted
 from utils.sed_doa import HiddenStateMSELoss_norm, SimpleAttentionDivergenceLoss, HiddenStateCosineLoss
 from utils.sed_doa import SemanticRepresentationDistillationLoss, SemanticRepresentationDistillationLoss_KLLoss_2
 
@@ -43,7 +44,10 @@ def main(args):
     use_attn_distill = args['train'].get('use_attn_distill', True)
     use_ts_distill = args['train'].get('use_ts_distill', True)
     use_srd_distill = args['train'].get('use_srd_distill', False)  # 新增SRD控制
+    use_CMAPC_distill = args['train'].get('use_CMAPC_distill', False) 
     hidden_distill_weighted = args['train'].get('hidden_distill_weighted', False)
+    att_distill_weighted = args['train'].get('att_distill_weighted', False)
+    use_cache_as_T = args['model'].get('use_cache_as_T', False)
 
     criterion = SedDoaLoss(loss_weight=[0.1,1])
     # 添加隐藏层和注意力图的损失函数
@@ -54,8 +58,13 @@ def main(args):
         hidden_criterion = HiddenStateMSELoss_weighted(loss_weight=args['train'].get('hidden_loss_weight', 0.2),
                                                        layer_weights=hidden_distill_layer_weight)
         # hidden_criterion = HiddenStateMSELoss_norm(loss_weight=args['train'].get('hidden_loss_weight', 0.2))
-    if use_attn_distill:
+    if use_attn_distill and not att_distill_weighted:
         attn_criterion = AttentionMapMSELoss(loss_weight=args['train'].get('attn_loss_weight', 0.05))
+        # attn_criterion = SimpleAttentionDivergenceLoss(loss_weight=args['train'].get('attn_loss_weight', 0.05))
+    elif use_attn_distill and att_distill_weighted:
+        attn_distill_layer_weight = args['train'].get('attn_distill_layer_weight', [1, 1, 1, 1, 1, 1, 1, 1])
+        attn_criterion = AttentionMapMSELoss_weighted(loss_weight=args['train'].get('attn_loss_weight', 0.05),
+                                                      layer_weights=attn_distill_layer_weight)
         # attn_criterion = SimpleAttentionDivergenceLoss(loss_weight=args['train'].get('attn_loss_weight', 0.05))
     if use_ts_distill:
         kl_criterion = SedDoaKLLoss_2(loss_weight=[0.1, 1]) 
@@ -71,6 +80,31 @@ def main(args):
             use_hidden_distill=use_hidden_distill,
             use_attn_distill=use_attn_distill,
             use_srd_distill=use_srd_distill,  # 新增参数
+            )
+    elif use_cache_as_T:
+        model = ResnetConformer_sed_doa_nopool_Cache_TS_hidstate_att_loss(
+                in_channel=args['model']['in_channel'], 
+                in_dim=args['model']['in_dim'], 
+                out_dim=args['model']['out_dim'],
+                att_context_size=args['model']['att_context_size'],
+                num_conformer_layer=args['model']['num_conformer_layer'],
+                encoder_dim=args['model']['encoder_dim'],
+                T_att_context_size = args['model']['T_att_context_size'],
+                use_hidden_distill=use_hidden_distill,
+                use_attn_distill=use_attn_distill,
+                )
+    elif use_CMAPC_distill:
+        model = ResnetConformer_sed_doa_nopool_TS_hidstate_att_CMAPC(
+            in_channel=args['model']['in_channel'], 
+            in_dim=args['model']['in_dim'], 
+            out_dim=args['model']['out_dim'],
+            att_context_size=args['model']['att_context_size'],
+            num_conformer_layer=args['model']['num_conformer_layer'],
+            encoder_dim = args['model']['encoder_dim'],
+            use_hidden_distill = use_hidden_distill,
+            use_attn_distill = use_attn_distill,
+            use_CMAPC_distill = use_CMAPC_distill,
+            CMAPC_future_steps = args['model']['apc_future_steps'],
             )
     else:
         model = ResnetConformer_sed_doa_nopool_TS_hidstate_att_loss(
@@ -186,7 +220,7 @@ def main(args):
     best_seld_score = float('inf')  # 初始化最佳SELD分数
     best_epoch = 0  # 初始化最佳epoch
     best_checkpoint = ''  # 初始化最佳checkpoint路径
-    patience = 40  # 早停耐心值
+    patience = 80  # 早停耐心值
     patience_counter = 0  # 早停计数器
     while not stop_training:
         train_loss = []
@@ -218,6 +252,10 @@ def main(args):
             if use_attn_distill:
                 teacher_attns, student_attns = model_outputs[output_idx]
                 output_idx += 1
+
+            if use_CMAPC_distill:
+                cross_modal_apc_loss = model_outputs[output_idx]
+                output_idx += 1
                 
             # **新增：解析SRD输出**
             if use_srd_distill:
@@ -242,10 +280,15 @@ def main(args):
                 attn_loss = attn_criterion(teacher_attns, student_attns)
                 total_loss += attn_loss
                 
+            if use_CMAPC_distill:
+                weighted_CMAPC_loss = cross_modal_apc_loss * args['train']['CMAPC_loss_weight']
+                total_loss += weighted_CMAPC_loss
+                
             # **新增：如果启用SRD蒸馏，计算SRD损失**
             if use_srd_distill:
                 srd_loss = srd_criterion(student_cross_output, teacher_cross_output)
-                total_loss += srd_loss * args['train']['srd_loss_weight']
+                weighted_srd_loss = srd_loss * args['train']['srd_loss_weight']
+                total_loss += weighted_srd_loss
             
             total_loss.backward()
             optimizer.step()
@@ -266,8 +309,10 @@ def main(args):
                     log_message += f', hidden_loss:{hidden_loss.item():.4f}'
                 if use_attn_distill:
                     log_message += f', attn_loss:{attn_loss.item():.4f}'
+                if use_CMAPC_distill:
+                    log_message += f', CMAPC_loss:{weighted_CMAPC_loss.item():.4f}'
                 if use_srd_distill:
-                    log_message += f', srd_loss:{srd_loss.item():.4f}'
+                    log_message += f', srd_loss:{weighted_srd_loss.item():.4f}'
                     
                 logger.info(log_message)
                 
