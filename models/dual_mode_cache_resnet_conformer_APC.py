@@ -562,11 +562,11 @@ class HiddenStateMSELoss(nn.Module):
         num_layers = len(teacher_hidden_states)
         
         for i in range(num_layers):
-            layer_loss = self.mse_loss(teacher_hidden_states[i], student_hidden_states[i])
+            layer_loss = self.mse_loss(student_hidden_states[i], teacher_hidden_states[i])
             total_loss += layer_loss
             
         # 计算所有层的平均损失并应用权重
-        return (total_loss / num_layers) * self.loss_weight
+        return (total_loss / num_layers)
         
 class DualModeResnetConformerCrossModalAPC_Distill_on_every_hidden(nn.Module):
     """
@@ -693,6 +693,7 @@ class DualModeResnetConformerCrossModalAPC_Distill_on_every_hidden(nn.Module):
             # 非流式前向传播
             nonstream_conformer_outputs = []
             stream_conformer_outputs = []
+            hidden_criterion = HiddenStateMSELoss()
 
             nonstream_resnet_out = self.resnet(x, mode='non-streaming')
             N, C, T, W = nonstream_resnet_out.shape
@@ -717,7 +718,7 @@ class DualModeResnetConformerCrossModalAPC_Distill_on_every_hidden(nn.Module):
                 stream_conformer_outputs.append(stream_conformer_out)
 
             
-            
+            distill_loss = hidden_criterion(nonstream_conformer_outputs, stream_conformer_outputs)
             # 计算知识蒸馏损失 - 在encoder输出层面蒸馏
             # distill_loss = F.smooth_l1_loss(stream_conformer_out, nonstream_conformer_out.detach())
 

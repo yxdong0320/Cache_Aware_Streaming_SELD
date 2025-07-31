@@ -13,7 +13,7 @@ import pdb
 
 from lmdb_data_loader_A import LmdbDataset
 
-from models.dual_mode_cache_resnet_conformer_APC import DualModeResnetConformerAPC, DualModeResnetConformerCrossModalAPC
+from models.dual_mode_cache_resnet_conformer_APC import DualModeResnetConformerAPC, DualModeResnetConformerCrossModalAPC, DualModeResnetConformerCrossModalAPC_Distill_on_every_hidden
 from lr_scheduler.tri_stage_lr_scheduler import TriStageLRScheduler
 from utils.cls_tools.cls_compute_seld_results import ComputeSELDResults
 from utils.write_csv import write_output_format_file
@@ -40,8 +40,11 @@ def main(args):
     result_class = SedDoaResult
     criterion = SedDoaLoss(loss_weight=[0.1,1])
     apc_loss_f = args['model'].get('apc_loss_f', 'L1')
+    distill_on_every_hidden = args['model'].get('distill_on_every_hidden', False)
     print('apc_loss_f: {}'.format(apc_loss_f))
-    model = DualModeResnetConformerCrossModalAPC(
+    if distill_on_every_hidden:
+        print(f'use distill_on_every_hidden')
+        model = DualModeResnetConformerCrossModalAPC_Distill_on_every_hidden(
         in_channel=args['model']['in_channel'], 
         in_dim=args['model']['in_dim'], 
         out_dim=args['model']['out_dim'],
@@ -52,6 +55,19 @@ def main(args):
         use_nonstream_apc=args['train'].get('use_nonstream_apc', False),  # 从train配置中读取
         loss_f=apc_loss_f,
         )
+    else:
+        print(f'distill_after_conformer')
+        model = DualModeResnetConformerCrossModalAPC(
+            in_channel=args['model']['in_channel'], 
+            in_dim=args['model']['in_dim'], 
+            out_dim=args['model']['out_dim'],
+            att_context_size=args['model']['att_context_size'],
+            num_conformer_layer=args['model']['num_conformer_layer'],
+            encoder_dim=args['model']['encoder_dim'],
+            apc_future_steps=args['model']['apc_future_steps'],
+            use_nonstream_apc=args['train'].get('use_nonstream_apc', False),  # 从train配置中读取
+            loss_f=apc_loss_f,
+            )
     # 训练集初始化
     train_split = [1,2,3]
     train_dataset = LmdbDataset(args['data']['train_lmdb_dir'], train_split, normalized_features_wts_file=args['data']['norm_file'],

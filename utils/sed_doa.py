@@ -375,8 +375,9 @@ class HiddenStateMSELoss(nn.Module):
         total_loss = 0
         num_layers = len(teacher_hidden_states)
         
-        for i in range(num_layers):
-            layer_loss = self.mse_loss(teacher_hidden_states[i], student_hidden_states[i])
+        for i in range(num_layers): 
+            # 修改：将要优化的目标放在loss函数第一位！！！！
+            layer_loss = self.mse_loss(student_hidden_states[i], teacher_hidden_states[i])
             total_loss += layer_loss
             
         # 计算所有层的平均损失并应用权重
@@ -406,7 +407,8 @@ class HiddenStateMSELoss_weighted(nn.Module):
         num_layers = len(teacher_hidden_states)
         
         for i in range(num_layers):
-            layer_loss = self.mse_loss(teacher_hidden_states[i], student_hidden_states[i])
+            # 修改：将要优化的目标放在loss函数第一位！！！！
+            layer_loss = self.mse_loss(student_hidden_states[i], teacher_hidden_states[i])
             total_loss += layer_loss * self.layer_weights[i]
             
         # 计算所有层的平均损失并应用权重
@@ -436,7 +438,8 @@ class AttentionMapMSELoss_weighted(nn.Module):
         for i in range(num_layers):
             # 注意：这里假设注意力图有相同的维度
             # 如果维度不同，需要进行截断或填充处理
-            layer_loss = self.mse_loss(teacher_attn_maps[i], student_attn_maps[i])
+            # 修改：将要优化的目标放在loss函数第一位！！！！
+            layer_loss = self.mse_loss(student_attn_maps[i], teacher_attn_maps[i])
             total_loss += layer_loss * self.layer_weights[i]
             
         # 计算所有层的平均损失并应用权重
@@ -465,7 +468,8 @@ class AttentionMapMSELoss(nn.Module):
         for i in range(num_layers):
             # 注意：这里假设注意力图有相同的维度
             # 如果维度不同，需要进行截断或填充处理
-            layer_loss = self.mse_loss(teacher_attn_maps[i], student_attn_maps[i])
+            # 修改：将要优化的目标放在loss函数第一位！！！！
+            layer_loss = self.mse_loss(student_attn_maps[i], teacher_attn_maps[i])
             total_loss += layer_loss
             
         # 计算所有层的平均损失并应用权重
