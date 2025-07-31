@@ -4,9 +4,9 @@ export CUDA_VISIBLE_DEVICES=3
 #         -c Test_Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC_NS_to_S \
 #         -m results/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC/checkpoints/checkpoint_epoch165_step90090.pth
 
-# nohup python finetune_A_cache_chunk_limited_TS_hidstate_att_loss.py \
-#         -c Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_loss_corrected_on200 \
-#         > train_logs/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_loss_corrected_on200_exp3.log &
+nohup python finetune_A_cache_chunk_limited_TS_hidstate_att_loss.py \
+        -c Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_lastlayer_loss_corrected_on200 \
+        > train_logs/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_lastlayer_loss_corrected_on200_exp2.log &
 
 
 # python finetune_A_cache_chunk_limited_TS_hidstate_att_loss.py \
@@ -15,9 +15,9 @@ export CUDA_VISIBLE_DEVICES=3
 #         -c Train_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_loss \
 #         > train_logs/Train_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_loss.log &
 
-nohup python train_A_dual_mode_cache_CrossModalAPC.py \
-        -c Dual_Cache_RC_24h_Chunk[100,4]_L8EM256_distill_on_every_hidden_on200 \
-        > train_logs/Dual_Cache_RC_24h_Chunk[100,4]_L8EM256_distill_on_every_hidden_on200.log &
+# nohup python train_A_dual_mode_cache_CrossModalAPC.py \
+#         -c Dual_Cache_RC_24h_Chunk[100,4]_L8EM256_distill_on_every_hidden_on200 \
+#         > train_logs/Dual_Cache_RC_24h_Chunk[100,4]_L8EM256_distill_on_every_hidden_on200.log &
 
 # python finetune_A_cache_chunk_limited_TS_hidstate_att_loss.py \
 #         -c Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_loss \

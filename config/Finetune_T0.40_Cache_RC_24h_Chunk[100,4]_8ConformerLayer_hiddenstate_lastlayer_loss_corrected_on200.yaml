@@ -24,20 +24,22 @@ model:
 train:
   train_num_workers: 8
   test_num_workers: 4
-  lr: 0.0001
+  lr: 0.0004
   kl_gamma: [1, 0.5]
   nb_steps: 60000
   use_ts_distill: false
   use_hidden_distill: true  # 是否使用隐藏层蒸馏
+  hidden_distill_weighted: true
+  hidden_distill_layer_weight: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
   use_attn_distill: false    # 是否使用注意力图蒸馏
   ts_loss_weight: 0.5
-  hidden_loss_weight: 0.0004   # 隐藏层损失权重
+  hidden_loss_weight: 0.005   # 隐藏层损失权重
   attn_loss_weight: 0.05    # 注意力图损失权重
 
 result:
-  log_output_path: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_loss_corrected_on200_exp4/train.log'
+  log_output_path: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_lastlayer_loss_corrected_on200_exp2/train.log'
   log_interval: 100
-  checkpoint_output_dir: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_loss_corrected_on200_exp4/checkpoints'
-  dcase_output_dir: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_loss_corrected_on200_exp4/results'
+  checkpoint_output_dir: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_lastlayer_loss_corrected_on200_exp2/checkpoints'
+  dcase_output_dir: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_lastlayer_loss_corrected_on200_exp2/results'
 
 
