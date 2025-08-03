@@ -5,8 +5,8 @@ export CUDA_VISIBLE_DEVICES=2
 #         -m results/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC/checkpoints/checkpoint_epoch165_step90090.pth
 
 nohup python finetune_A_cache_chunk_limited_TS_hidstate_att_loss.py \
-        -c Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hidden_lastlayer_warmup20 \
-        > train_logs/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hidden_lastlayer_warmup20.log &
+        -c Finetune_T0.40_Cache_RC_24h_Chunk[100,49]_8ConformerLayer_CMAPC_fustep10_hidden_lastlayer_warmup20 \
+        > train_logs/Finetune_T0.40_Cache_RC_24h_Chunk[100,49]_8ConformerLayer_CMAPC_fustep10_hidden_lastlayer_warmup20.log &
 
 
 # python finetune_A_cache_chunk_limited_TS_hidstate_att_loss.py \
