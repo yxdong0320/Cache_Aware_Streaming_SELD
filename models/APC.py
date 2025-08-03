@@ -80,7 +80,8 @@ class CrossModalAPCModule(nn.Module):
         self.predictors = nn.ModuleList([
             nn.Sequential(
                 nn.Linear(input_dim, input_dim),
-                nn.GELU(),
+                nn.LayerNorm(input_dim), #据说最优配置
+                # nn.GELU(),
                 nn.Dropout(0.1)
             ) for _ in range(future_steps)
         ])
@@ -113,7 +114,8 @@ class CrossModalAPCModule(nn.Module):
             predicted = self.predictors[k-1](current_stream)
             
             # 计算L1损失
-            step_loss = F.l1_loss(predicted, future_nonstream.detach())
+            # step_loss = F.l1_loss(predicted, future_nonstream.detach())
+            step_loss = F.mse_loss(predicted, future_nonstream.detach()) #据说最优配置
             total_loss += step_loss
             
         return total_loss / self.future_steps if self.future_steps > 0 else 0.0

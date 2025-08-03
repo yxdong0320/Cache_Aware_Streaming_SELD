@@ -17,7 +17,7 @@ model:
   att_context_size: [100,4]
   num_conformer_layer: 8
   encoder_dim: 256
-  apc_future_steps: 10
+  apc_future_steps: 5
   pre-train: True
   pre-train_model_t: 'results/Offline_RC_24h_8ConformerLayer/checkpoints/checkpoint_epoch147_step40131.pth'
   pre-train_model_s: 'test_models/RC_24h_Chunk[100,4]_8Conformer_Best.pth'
@@ -37,12 +37,12 @@ train:
   ts_loss_weight: 0.5
   hidden_loss_weight: 0.0001   # 隐藏层损失权重
   attn_loss_weight: 10    # 注意力图损失权重
-  CMAPC_loss_weight: 0.01
+  CMAPC_loss_weight: 0.1
 
 result:
-  log_output_path: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_loss_exp2/train.log'
+  log_output_path: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_fustep5_warmup20/train.log'
   log_interval: 100
-  checkpoint_output_dir: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_loss_exp2/checkpoints'
-  dcase_output_dir: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_loss_exp2/results'
+  checkpoint_output_dir: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_fustep5_warmup20/checkpoints'
+  dcase_output_dir: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_fustep5_warmup20/results'
 
 

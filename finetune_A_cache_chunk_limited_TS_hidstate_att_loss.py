@@ -247,9 +247,9 @@ def main(args):
     # 优化器初始化
     optimizer = optim.Adam(model.parameters(), lr=args['train']['lr'])
     total_steps = args['train']['nb_steps']
-    warmup_steps = int(total_steps*0.05)
-    hold_steps = int(total_steps*0.25)
-    decay_steps = int(total_steps*0.70)
+    warmup_steps = int(total_steps*0.20)
+    hold_steps = int(total_steps*0.30)
+    decay_steps = int(total_steps*0.50)
     scheduler = TriStageLRScheduler(optimizer, peak_lr=args['train']['lr'], init_lr_scale=0.01, final_lr_scale=0.05, 
                                     warmup_steps=warmup_steps, hold_steps=hold_steps, decay_steps=decay_steps)
     epoch_count = 0

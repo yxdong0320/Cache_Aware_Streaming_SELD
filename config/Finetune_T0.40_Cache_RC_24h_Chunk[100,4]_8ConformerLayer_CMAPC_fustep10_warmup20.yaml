@@ -37,12 +37,12 @@ train:
   ts_loss_weight: 0.5
   hidden_loss_weight: 0.0001   # 隐藏层损失权重
   attn_loss_weight: 10    # 注意力图损失权重
-  CMAPC_loss_weight: 0.01
+  CMAPC_loss_weight: 0.1
 
 result:
-  log_output_path: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_loss_exp2/train.log'
+  log_output_path: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_fustep10_warmup20/train.log'
   log_interval: 100
-  checkpoint_output_dir: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_loss_exp2/checkpoints'
-  dcase_output_dir: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_loss_exp2/results'
+  checkpoint_output_dir: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_fustep10_warmup20/checkpoints'
+  dcase_output_dir: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_fustep10_warmup20/results'
 
 

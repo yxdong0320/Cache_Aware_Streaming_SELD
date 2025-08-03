@@ -10,7 +10,7 @@ data:
   test_ignore: 'enh'
 
 model:
-  type: 'finetune_seddoa_nopool_CMAPC_loss'
+  type: 'finetune_seddoa_nopool_CMAPC_hidden_lastlayer_loss'
   in_channel: 7
   in_dim: 64
   out_dim: 39
@@ -29,20 +29,22 @@ train:
   kl_gamma: [1, 0.5]
   nb_steps: 60000
   use_ts_distill: false
-  use_hidden_distill: false  # 是否使用隐藏层蒸馏
+  use_hidden_distill: true  # 是否使用隐藏层蒸馏
   use_attn_distill: false    # 是否使用注意力图蒸馏
   att_distill_weighted: false
   attn_distill_layer_weight: [0, 0, 0, 0, 0, 0, 0, 1]
   use_CMAPC_distill: true
   ts_loss_weight: 0.5
-  hidden_loss_weight: 0.0001   # 隐藏层损失权重
+  hidden_loss_weight: 0.1   # 隐藏层损失权重
+  hidden_distill_weighted: True
+  hidden_distill_layer_weight: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
   attn_loss_weight: 10    # 注意力图损失权重
-  CMAPC_loss_weight: 0.01
+  CMAPC_loss_weight: 0.1
 
 result:
-  log_output_path: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_loss_exp2/train.log'
+  log_output_path: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_fustep10_hidden_lastlayer_warmup20_exp2/train.log'
   log_interval: 100
-  checkpoint_output_dir: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_loss_exp2/checkpoints'
-  dcase_output_dir: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_loss_exp2/results'
+  checkpoint_output_dir: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_fustep10_hidden_lastlayer_warmup20_exp2/checkpoints'
+  dcase_output_dir: 'results/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_fustep10_hidden_lastlayer_warmup20_exp2/results'
 
 
