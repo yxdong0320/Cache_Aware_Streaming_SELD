@@ -202,10 +202,15 @@ class KnowledgeDistillationVisualizer:
             
             # 合并特征进行降维
             combined_features = torch.cat([t_last, s_last, sf_last], dim=0).numpy()
-            
-            if combined_features.shape[1] > 50:  # 如果维度太高，先用PCA降维
-                pca = PCA(n_components=50)
+
+            if combined_features.shape[1] > 50:  # 256 > 50，会进入这个分支
+                n_components = min(30, combined_features.shape[0] - 1)  # 3-1=2，所以n_components=2
+                pca = PCA(n_components=n_components)
                 combined_features = pca.fit_transform(combined_features)
+            
+            # if combined_features.shape[1] > 50:  # 如果维度太高，先用PCA降维
+            #     pca = PCA(n_components=50)
+            #     combined_features = pca.fit_transform(combined_features)
                 
             tsne = TSNE(n_components=2, random_state=42, perplexity=1)
             embedded = tsne.fit_transform(combined_features)

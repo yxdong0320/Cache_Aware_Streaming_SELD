@@ -1,12 +1,19 @@
-export CUDA_VISIBLE_DEVICES=3
+export CUDA_VISIBLE_DEVICES=1
+
+python t_s_finetuned_models_visualize.py \
+    -c Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_CMAPC_fustep10_hidden_lastlayer_att_loss_warmup20_on200 \
+    --teacher_model /disk3/yxdong/Cache_Aware_Streaming_SELD/test_models/RC_24h_Offline.pth \
+    --student_model /disk3/yxdong/Cache_Aware_Streaming_SELD/test_models/RC_24h_Chunk[100,4]_8Conformer_Best.pth \
+    --student_finetuned /disk3/yxdong/Cache_Aware_Streaming_SELD/test_models/Finetuned_Cache_RC_24h_Chunk[100,4]_Best.pth \
+    --num_samples 3
 
 # python test_A_dual_NS_to_S.py \
 #         -c Test_Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC_NS_to_S \
 #         -m results/Dual_Cache_APC_RC_24h_Chunk[100,49]_L8EM256_Fustep10_APC/checkpoints/checkpoint_epoch165_step90090.pth
 
-nohup python finetune_A_cache_chunk_limited_TS_hidstate_att_loss.py \
-        -c Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_lastlayer_loss_corrected_on200 \
-        > train_logs/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_lastlayer_loss_corrected_on200_exp2.log &
+# nohup python finetune_A_cache_chunk_limited_TS_hidstate_att_loss.py \
+#         -c Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_lastlayer_loss_corrected_on200 \
+#         > train_logs/Finetune_T0.40_Cache_RC_24h_Chunk[100,4]_8ConformerLayer_hiddenstate_lastlayer_loss_corrected_on200_exp2.log &
 
 
 # python finetune_A_cache_chunk_limited_TS_hidstate_att_loss.py \
