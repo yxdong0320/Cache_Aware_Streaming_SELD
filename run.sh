@@ -6,7 +6,7 @@ export CUDA_VISIBLE_DEVICES=2
 
 nohup python finetune_A_cache_chunk_limited_TS_hidstate_att_loss.py \
         -c Finetune_T0.40_Cache_RC_24h_Chunk[100,49]_8ConformerLayer_CMAPC_fustep10_hidden_lastlayer_warmup20 \
-        > train_logs/Finetune_T0.40_Cache_RC_24h_Chunk[100,49]_8ConformerLayer_CMAPC_fustep10_hidden_lastlayer_warmup20.log &
+        > train_logs/Finetune_T0.40_Cache_RC_24h_Chunk[100,49]_8ConformerLayer_CMAPC_fustep10_hidden_lastlayer_warmup20_exp2.log &
 
 
 # python finetune_A_cache_chunk_limited_TS_hidstate_att_loss.py \
