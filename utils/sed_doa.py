@@ -414,6 +414,39 @@ class HiddenStateMSELoss_weighted(nn.Module):
         # 计算所有层的平均损失并应用权重
         return (total_loss / sum(self.layer_weights)) * self.loss_weight
     
+class HiddenStateMSELoss_lastlayer_ts_not_equal(nn.Module):
+    def __init__(self, loss_weight=1.0, layer_weights=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]):
+        super().__init__()
+        self.loss_weight = loss_weight
+        self.mse_loss = nn.MSELoss()
+        self.layer_weights = layer_weights
+        
+    def forward(self, teacher_hidden_states, student_hidden_states):
+        """
+        计算教师模型和学生模型隐藏层状态之间的MSE损失
+        
+        Args:
+            teacher_hidden_states: 教师模型各层的隐藏状态列表
+            student_hidden_states: 学生模型各层的隐藏状态列表
+            
+        Returns:
+            loss: 加权平均的MSE损失
+        """
+        # layer_weights = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]  # 最后一层权重减半
+
+        # total_loss = 0
+        # num_layers = len(teacher_hidden_states)
+
+        total_loss = self.mse_loss(student_hidden_states[-1], teacher_hidden_states[-1])
+        
+        # for i in range(num_layers):
+        #     # 修改：将要优化的目标放在loss函数第一位！！！！
+        #     layer_loss = self.mse_loss(student_hidden_states[i], teacher_hidden_states[i])
+        #     total_loss += layer_loss * self.layer_weights[i]
+            
+        # 计算所有层的平均损失并应用权重
+        return total_loss * self.loss_weight
+    
 class AttentionMapMSELoss_weighted(nn.Module):
     def __init__(self, loss_weight=0.05, layer_weights=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]):
         super().__init__()

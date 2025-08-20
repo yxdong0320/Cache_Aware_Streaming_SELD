@@ -17,7 +17,7 @@ from lr_scheduler.tri_stage_lr_scheduler import TriStageLRScheduler
 from utils.cls_tools.cls_compute_seld_results import ComputeSELDResults
 from utils.write_csv import write_output_format_file
 from utils.sed_doa import SedDoaResult, process_foa_input_sed_doa_labels, SedDoaLoss, SedDoaKLLoss_2
-from utils.sed_doa import HiddenStateMSELoss, AttentionMapMSELoss, HiddenStateMSELoss_weighted, AttentionMapMSELoss_weighted
+from utils.sed_doa import HiddenStateMSELoss, AttentionMapMSELoss, HiddenStateMSELoss_weighted, AttentionMapMSELoss_weighted, HiddenStateMSELoss_lastlayer_ts_not_equal
 from utils.sed_doa import HiddenStateMSELoss_norm, SimpleAttentionDivergenceLoss, HiddenStateCosineLoss
 from utils.sed_doa import SemanticRepresentationDistillationLoss_KLLoss_2
 
@@ -89,7 +89,12 @@ def main(args):
         hidden_criterion = HiddenStateMSELoss(loss_weight=args['train'].get('hidden_loss_weight', 0.2))
     elif use_hidden_distill and hidden_distill_weighted:
         hidden_distill_layer_weight = args['train'].get('hidden_distill_layer_weight', [1, 1, 1, 1, 1, 1, 1, 1])
-        hidden_criterion = HiddenStateMSELoss_weighted(loss_weight=args['train'].get('hidden_loss_weight', 0.2),
+        if int(args['model']['num_conformer_layer']) != 8:
+            print(f'学生模型与老师模型层数不匹配')
+            hidden_criterion = HiddenStateMSELoss_lastlayer_ts_not_equal(loss_weight=args['train'].get('hidden_loss_weight', 0.2),
+                                                       layer_weights=hidden_distill_layer_weight)
+        else:
+            hidden_criterion = HiddenStateMSELoss_weighted(loss_weight=args['train'].get('hidden_loss_weight', 0.2),
                                                        layer_weights=hidden_distill_layer_weight)
         # hidden_criterion = HiddenStateMSELoss_norm(loss_weight=args['train'].get('hidden_loss_weight', 0.2))
     if use_attn_distill and not att_distill_weighted:
